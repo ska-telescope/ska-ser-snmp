@@ -1,0 +1,90 @@
+[build-system]
+requires = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "ska-low-itf-devices"
+version = "0.0.1"
+description = "Python package for LOW ITF equipment tango devices"
+authors = ["Malte Marquarding <malte.marquarding@csiro.au>"]
+license = "BSD 3-clause new license"
+
+[tool.poetry.scripts]
+# tbd
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytango = "9.3.6"
+PyYAML = "^6.0"
+numpy = "1.23.0"
+ska-tango-base = "0.18.0"
+ska-control-model = "^0.3.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+darglint = "^1.8.1"
+isort = "^5.10.1"
+flake8 = "^6.0.0"
+flake8-docstrings = "^1.7.0"
+flake8-rst-docstrings = "^0.3.0"
+flake8-pyproject = "^1.2.3"
+mypy = "^0.961"
+pylint = "^2.17.2"
+pylint-junit = "^0.3.2"
+pytest = "^7.3.1"
+pytest-cov = "^4.0.0"
+pytest-forked = "^1.4.0"
+pytest-json-report = "^1.5.0"
+pytest-timeout = "^2.1.0"
+toml = "^0.10.2"
+pycodestyle = "^2.9.1"
+ska-tango-testing = "^0.4.0"
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "^5.2"
+PyYAML = "^6.0"
+sphinx-rtd-theme = "^1.0"
+sphinx-autodoc-typehints = "^1.19"
+
+[[tool.poetry.source]]
+name = 'skao'
+url = 'https://artefact.skao.int/repository/pypi-internal/simple'
+
+[tool.pytest.ini_options]
+addopts = "-v"
+
+[tool.flake8]
+docstring-style = "sphinx"
+rst-directives = "literalinclude"
+rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", "py:mod"]
+#enable = "DAR104"
+max-complexity = 10
+
+# E203 and W503 conflict with black
+ignore = ["E203", "W503"]
+
+[tool.mypy]
+mypy_path = "src/:tests/"
+show_error_codes = true
+#disallow_untyped_defs = true
+strict = true
+
+[[tool.mypy.overrides]]
+module = [
+    "tango"
+]
+ignore_missing_imports = true
+
+[tool.pylint.messages_control]
+disable = [
+    "duplicate-code"
+]
+enable = ["useless-suppression"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 7
+ignore-imports = "yes"
+
+[tool.pylint.master]
+
+[tool.coverage.run]
