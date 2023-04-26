@@ -54,7 +54,6 @@ url = 'https://artefact.skao.int/repository/pypi-internal/simple'
 addopts = "-v"
 
 [tool.flake8]
-max-line-length = 79
 docstring-style = "sphinx"
 rst-directives = "literalinclude"
 rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", "py:mod"]
@@ -68,7 +67,6 @@ ignore = ["E203", "W503"]
 mypy_path = "src/:tests/"
 show_error_codes = true
 #disallow_untyped_defs = true
-no_implicit_optional = true
 strict = true
 
 [[tool.mypy.overrides]]
@@ -79,8 +77,7 @@ ignore_missing_imports = true
 
 [tool.pylint.messages_control]
 disable = [
-    "duplicate-code",
-    "fixme"
+    "duplicate-code"
 ]
 enable = ["useless-suppression"]
 
