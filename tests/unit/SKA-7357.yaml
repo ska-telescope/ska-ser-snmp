@@ -1,0 +1,61 @@
+attributes:
+#  # Relatively static attributes that we'll poll only once
+#  - name: firmwareVersion
+#    oid: [ ENLOGIC-PDU-MIB, pduNamePlateFirmwareVersion, 1 ]
+#    polling_period: .inf
+#
+#  - name: modelNumber
+#    oid: [ ENLOGIC-PDU-MIB, pduNamePlatePartNumber, 1 ]
+#    polling_period: .inf
+#
+#  - name: serialNumber
+#    oid: [ ENLOGIC-PDU-MIB, pduNamePlateSerialNumber, 1 ]
+#    polling_period: .inf
+#
+#  - name: systemDescription
+#    oid: [ SNMPv2-MIB, sysDescr, 0 ]
+#    polling_period: .inf
+#
+#  # more likely to change but only occasionally
+#
+#
+#  - name: coldstartDelay
+#    oid: [ ENLOGIC-PDU-MIB, pduUnitConfigColdstartDelay, 1 ]
+#    polling_period: 15000
+#
+#  - name: outlet{}State
+#    indexes:
+#      - [ 1, 2 ]
+#    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1 ]
+#
+#  - name: outlet{}Current
+#    indexes:
+#      - [ 1, 2 ]
+#    oid: [ ENLOGIC-PDU-MIB, pduOutletMeteredSTATUSCurrent, 1 ]
+
+
+  - name: writeableEnum
+    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedStateOnStartup, 1, 1 ]
+
+  - name: writeableInt
+    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedConfigRebootDuration, 1, 1 ]
+
+  - name: bitEnum
+    oid: [ ENLOGIC-PDU-MIB,  pduOutletMeteredConfigEnabledThresholds, 1, 1 ]
+
+  - name: writeableString
+    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedName, 1 , 1 ]
+
+  - name: enumWithInvalid
+    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1, 1 ]
+
+  - name: fastPoller
+    oid: [ SNMPv2-MIB, snmpInPkts, 0 ]
+    polling_period: 1000
+
+  - name: slowPoller
+    oid: [ SNMPv2-MIB, snmpOutPkts, 0 ]
+    polling_period: 5000
+
+  - name: writeableConstrainedInt
+    oid: [ ENLOGIC-PDU-MIB, pduUnitConfigColdstartDelay, 1]

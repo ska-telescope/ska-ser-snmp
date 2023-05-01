@@ -1,0 +1,6 @@
+name: ska-low-itf-devices
+channels:
+  - conda-forge
+dependencies:
+  - pytango
+  - numpy

@@ -13,12 +13,14 @@ license = "BSD 3-clause new license"
 # tbd
 
 [tool.poetry.dependencies]
-python = "^3.10"
-pytango = "9.3.6"
+python = "~3.10"
+pytango = "^9.4.1"
 PyYAML = "^6.0"
-numpy = "1.23.0"
-ska-tango-base = "0.18.0"
+numpy = "^1.23"
+ska-tango-base = "^0.18.1"
 ska-control-model = "^0.3.1"
+pysnmp-lextudio = "^5.0.27"
+more-itertools = "^9.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -52,6 +54,8 @@ url = 'https://artefact.skao.int/repository/pypi-internal/simple'
 
 [tool.pytest.ini_options]
 addopts = "-v"
+log_cli = true
+log_cli_level = "DEBUG"
 
 [tool.flake8]
 docstring-style = "sphinx"
@@ -61,7 +65,7 @@ rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", 
 max-complexity = 10
 
 # E203 and W503 conflict with black
-ignore = ["E203", "W503"]
+ignore = ["E203", "W503", "E501"]
 
 [tool.mypy]
 mypy_path = "src/:tests/"
@@ -86,5 +90,7 @@ min-similarity-lines = 7
 ignore-imports = "yes"
 
 [tool.pylint.master]
+ignore = "tests"
+disable = ["C0301", "W0511", "missing-module-docstring", "missing-class-docstring"]
 
 [tool.coverage.run]
