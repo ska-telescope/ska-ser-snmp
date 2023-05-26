@@ -1,10 +1,29 @@
-# This file allows macOS users to install PyTango locally. It even works on ARM!
+# This file allows macOS users to install PyTango locally with conda. It even works on ARM!
 #
+# Using conda+poetry is a bit weird. First create the conda env:
 #
+#   $ conda env create
+#
+# This will take a while. Next, activate your env with
+#
+#   $ conda activate ska-low-itf-devices
+# 
+# Some conda packages leave behind a file which makes Poetry consider them not valid.
+# This makes Poetry try to upgrade PyTango to the PyPI version which defeats the purpose.
+#
+# To work around this problem, first find the path to your current conda env with `conda env list`.
+# Then find and delete all direct_url.json files: 
+# 
+#   $ find <your conda env path> -name direct_url.json
+#
+# And install the rest of your dependencies with poetry:
+#
+#   $ poetry install
+
 
 name: ska-low-itf-devices
 channels:
   - conda-forge
 dependencies:
-  - pytango
-  - numpy
+  - python=3.10
+  - pytango=9.4
