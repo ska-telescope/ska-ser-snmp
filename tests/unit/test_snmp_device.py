@@ -22,12 +22,11 @@ def test_int(snmp_device):
 
 def test_bits(snmp_device, endpoint):
     host, _ = endpoint
+
     # Hack for EN6808-specific behaviour, where you can't
     # write [], so you set the 4 bit to clear all the others
-    if host == "127.0.0.1":
-        setval = object
-    else:
-        setval = [4]
+    setval = object if host == "127.0.0.1" else [4]
+
     with restore(snmp_device, "bitEnum", setval=setval):
         snmp_device.bitEnum = [0]
         expect_attribute(snmp_device, "bitEnum", [0])
@@ -50,10 +49,11 @@ def test_enum(snmp_device):
     with restore(snmp_device, "writeableEnum") as current:
         assert isinstance(current, Enum)
         dtype = type(current)
-        snmp_device.writeableEnum = dtype.on  # noqa
+        snmp_device.writeableEnum = dtype(1)
         expect_attribute(snmp_device, "writeableEnum", 1)
-        snmp_device.writeableEnum = dtype.lastKnownState  # noqa
+        snmp_device.writeableEnum = dtype(2)
         expect_attribute(snmp_device, "writeableEnum", 2)
+        assert snmp_device.writeableEnum.name == "lastKnownState"
 
 
 def test_enum_invalid(snmp_device):

@@ -50,11 +50,11 @@ def test_component_manager_polling_periods(component_manager):
     mgr = component_manager
     assert all(t == float("-inf") for t in mgr._last_polled.values())
 
-    def oid_for_object(o: Any):
+    def oid_for_object(o: Any) -> Any:
         identity, _ = o._ObjectType__args
         return identity._ObjectIdentity__args
 
-    def time_travel(d):
+    def time_travel(d: float) -> None:
         mgr._last_polled.update((k, v - d) for k, v in mgr._last_polled.items())
 
     fast_oid = ("MIB", "tastic", 1)

@@ -1,3 +1,7 @@
+# This file allows macOS users to install PyTango locally. It even works on ARM!
+#
+#
+
 name: ska-low-itf-devices
 channels:
   - conda-forge

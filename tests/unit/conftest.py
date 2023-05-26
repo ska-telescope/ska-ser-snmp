@@ -3,7 +3,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from queue import SimpleQueue
-from typing import Any
+from typing import Any, Generator
 
 import numpy as np
 import pytest
@@ -66,7 +66,9 @@ def expect_attribute(
 
 
 @contextmanager
-def restore(dev, attr, setval: Any = object):
+def restore(
+    dev: DeviceProxy, attr: str, setval: Any = object
+) -> Generator[Any, None, None]:
     old_val = getattr(dev, attr)
     yield old_val
     setattr(dev, attr, old_val if setval is object else setval)
@@ -84,7 +86,7 @@ def endpoint():
 
 
 @pytest.fixture
-def snmp_device(definition_path, endpoint) -> DeviceProxy:
+def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
     host, port = endpoint
     ctx = DeviceTestContext(
         SNMPDevice,

@@ -19,12 +19,9 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     UpdateRate = device_property(dtype=float, default_value=2.0)
 
     def create_component_manager(self) -> SNMPComponentManager:
-        """
-        Called during super().init_device().
-        """
-
-        # can't access properties before tango.server.BaseDevice.init_device()
-        # has been called
+        """Create and return a component manager. Called during init_device()."""
+        # This goes here because you don't have access to properties
+        # until tango.server.BaseDevice.init_device() has been called
         dynamic_attrs = parse_device_definition(
             load_device_definition(self.DeviceDefinition)
         )
@@ -46,6 +43,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
         )
 
     def initialize_dynamic_attributes(self) -> None:
+        """Do what the name says. Called by Tango during init_device()."""
         for name, attr_info in self._dynamic_attrs.items():
             # partial(self._dynamic_is_allowed, name) doesn't work here
             # because Tango is too clever with the callback
@@ -71,10 +69,6 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
         )
 
     def _dynamic_get(self, attr: Attribute) -> None:
-        """
-        Getting involves just reading a value from local state. The actual SNMP
-        get is performed in read_attr_hardware().
-        """
         # pylint: disable=protected-access
         val = self.component_manager._component_state[attr.get_name()]
         if val is None:
@@ -84,10 +78,6 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             attr.set_value(val)
 
     def _dynamic_set(self, attr: WAttribute) -> None:
-        """
-        Setting involves just setting a value in local state. The actual SNMP
-        set will be performed later, when Tango calls write_attr_hardware().
-        """
         value = attr.get_write_value()
         attr_name = attr.get_name()
         self.component_manager.enqueue_write(attr_name, value)

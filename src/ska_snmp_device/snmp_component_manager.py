@@ -28,12 +28,11 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
             UdpTransportTarget,
             ContextData,
             ObjectType,
-            ...,
         ],
         Iterable,
     ]
 
-    def __init__(
+    def __init__(  # noqa: D107
         self,
         host: str,
         port: int,
@@ -84,10 +83,11 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
     def get_request(self) -> list[ObjectType]:
         """
-        Assemble a list of ObjectTypes representing pending writes and reads,
-        in that order. The writes come from `self._pending_writes`, and reads
+        Assemble a list of ObjectTypes representing pending writes and reads.
+
+        The writes appear first, and come from `self._pending_writes`. Reads
         are requested for each attribute whose last successful poll happened
-        longer ago than its polling period.
+        longer ago than its polling period, and each attribute being written.
         """
         # atomically drain the write queue
         pending_writes = dict(iter_except(self._pending_writes.popitem, KeyError))
@@ -108,10 +108,11 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
     def poll(self, poll_request: list[ObjectType]) -> list[ObjectType]:
         """
-        Group by writes and reads, chunk, and run the appropriate SNMP
-        command. Aggregate the returned ObjectTypes as the poll response.
+        Group by writes and reads, chunk, and run the appropriate SNMP command.
+
+        Aggregate any returned ObjectTypes from GET commands as the poll response.
         """
-        poll_response = []
+        poll_response: list[ObjectType] = []
         for cmd, group in groupby(poll_request, self._snmp_cmd_for_obj):
             for objs in chunked(group, MAX_SNMP_OBJS):
                 poll_response.extend(self._snmp_cmd(cmd, objs))
@@ -119,8 +120,9 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
     def poll_succeeded(self, poll_response: list[ObjectType]) -> None:
         """
-        Map the poll responses from OIDs back to attribute names, perform
-        any necessary munging of returned values, and notify the device.
+        Notify the device of the return values of a successful poll.
+
+        This involves type coercion from PySNMP- to PyTango-compatible types.
         """
         super().poll_succeeded(poll_response)
         state_updates = {}
@@ -138,8 +140,8 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
     def enqueue_write(self, attr_name: str, val: Any) -> None:
         """
-        Convert an attr_name and val to an SNMP identity and a value suitable
-        to be passed to PySNMP, and queue them up to be SET on the next poll.
+        Queue an attribute value to be written on the next poll.
+
         If there is already a write pending for the attribute, it will be superseded.
         """
         # Tango DevEnums have to start at 0, but many SNMP enums start at 1.
@@ -152,12 +154,10 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         self, cmd_fn: SNMPCmdFn, objects: Iterable[ObjectType]
     ) -> Generator[ObjectType, None, None]:
         """
-        Execute the given SNMP command with the given objects. It is assumed
-        that we're in a polling loop and that _snmp_base_args has therefore
-        been populated. Only SET and GET are currently supported.
+        Execute the given SNMP command with the given objects.
 
-        Returns an empty list in the case of SET, a list of valued ObjectTypes
-        in the case of GET.
+        Yields each valued ObjectType in the response in the case of GET, and
+        nothing in the case of SET. No other commands are currently supported.
         """
         iterator = cmd_fn(
             SnmpEngine(),
@@ -185,15 +185,17 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
     def _snmp_cmd_for_obj(obj: ObjectType) -> SNMPCmdFn:
         # pylint: disable=protected-access
         val = obj._ObjectType__args[1]  # noqa
-        return getCmd if val is unSpecified else setCmd
+        cmd: SNMPComponentManager.SNMPCmdFn = getCmd if val is unSpecified else setCmd
+        return cmd
 
     @staticmethod
     def _mib_symbolic(oid: ObjectIdentity) -> tuple[str | int, ...]:
         """
-        Return a (mib_name, symbol_name, *indexes) tuple from an ObjectIdentity,
-        suitable for unpacking as the arguments to ObjectIdentity.__init__(). This
-        is nearly the same as ObjectIdentity.getMibSymbol(), but that returns the
-        indexes as a nested tuple, which we need to flatten.
+        Construct a (mib_name, symbol_name, *indexes) tuple from an ObjectIdentity.
+
+        This is nearly the same as ObjectIdentity.getMibSymbol(), but that returns
+        the indexes as a nested tuple, which we need to flatten. The returned value
+        is suitable to be unpacked as the arguments to ObjectIdentity.__init__().
 
         There's another complication when dealing with SNMP objects that aren't
         part of a table (i.e. OIDs whose last segment is "0"). PySNMP returns
@@ -204,28 +206,28 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         indices = (y for x in indices for y in (x if isinstance(x, Iterable) else [x]))
         return mib, name, *indices
 
-    def off(
+    def off(  # noqa: D102
         self, task_callback: TaskCallbackType | None = None
     ) -> tuple[TaskStatus, str]:
         raise NotImplementedError(
             "SNMPComponentManager doesn't implement on, off, standby or reset"
         )
 
-    def standby(
+    def standby(  # noqa: D102
         self, task_callback: TaskCallbackType | None = None
     ) -> tuple[TaskStatus, str]:
         raise NotImplementedError(
             "SNMPComponentManager doesn't implement on, off, standby or reset"
         )
 
-    def on(
+    def on(  # noqa: D102
         self, task_callback: TaskCallbackType | None = None
     ) -> tuple[TaskStatus, str]:
         raise NotImplementedError(
             "SNMPComponentManager doesn't implement on, off, standby or reset"
         )
 
-    def reset(
+    def reset(  # noqa: D102
         self, task_callback: TaskCallbackType | None = None
     ) -> tuple[TaskStatus, str]:
         raise NotImplementedError(

@@ -1,7 +1,8 @@
 """
-Functions to handle conversion between raw Python and PySNMP-compatible types,
-and to build Tango attribute args from PySNMP types. It should be possible to
-add support for new types by only modifying the functions in this module.
+Functions to handle translation between PyTango- and PySNMP-compatible types.
+
+It should be possible to add support for new types by only modifying
+the functions in this module.
 """
 
 from dataclasses import dataclass
@@ -33,11 +34,8 @@ class SNMPAttrInfo:
     dtype: type
 
 
-def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type):
-    """
-    Convert the SNMP type value to a native Python type to be set as
-    the value of the associated Tango attribute.
-    """
+def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
+    """Coerce a PySNMP value to a PyTango-compatible Python type."""
     if isinstance(value, Integer):
         value = int(value)
     if isinstance(value, Bits):
@@ -52,10 +50,13 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type):
     return value
 
 
-def python_to_snmp(attr: SNMPAttrInfo, value: Any):
+def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
     """
-    Map Python/PyTango types to SNMP types. This has less work to do
-    than snmp_to_python(), as PySNMP does a good job of type coercion.
+    Coerce a Python/PyTango value to a PySNMP-compatible type.
+
+    This has less work to do than snmp_to_python(), as PySNMP does a pretty
+    good job of type coercion. We don't actually have to create an Asn1Type
+    object here; that happens deep in the bowels of PySNMP.
     """
     if issubclass(attr.dtype, BitEnum):
         n_bytes = ceil(len(attr.dtype) / 8)
@@ -73,32 +74,32 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any):
     return value
 
 
-def attr_args_from_snmp_type(mib_type: Asn1Type) -> dict[str, Any]:
+def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
     """
-    This is key function, which maps SNMP types to Tango attribute() args.
-    Currently only strings, enums and various kinds of ints are implemented,
-    but adding more types will be a matter of adding more cases to this if
-    statement.
+    Given an SNMP type, return kwargs to be passed to tango.server.attribute().
+
+    Currently only strings, enums, bits, and various kinds of ints are implemented,
+    but adding more types will be a matter of adding more cases to this if statement.
     """
     attr_args: dict[str, Any] = {}
-    if isinstance(mib_type, Bits):
-        enum = _enum_from_named_values(mib_type.namedValues, cls=BitEnum)
+    if isinstance(snmp_type, Bits):
+        enum = _enum_from_named_values(snmp_type.namedValues, cls=BitEnum)
         attr_args.update(
             dtype=enum,
             dformat=AttrDataFormat.SPECTRUM,
             max_dim_x=len(enum),
         )
-    elif isinstance(mib_type, OctetString):
+    elif isinstance(snmp_type, OctetString):
         attr_args.update(
             dtype=str,
         )
-    elif isinstance(mib_type, Integer):
+    elif isinstance(snmp_type, Integer):
         # Specific case where an integer field has an enum constraint.
         # I'm assuming here that if there are namedValues, there are no
         # other valid-but-unnamed values - true for the MIBs I've seen.
-        if mib_type.namedValues:
+        if snmp_type.namedValues:
             try:
-                attr_args.update(dtype=_enum_from_named_values(mib_type.namedValues))
+                attr_args.update(dtype=_enum_from_named_values(snmp_type.namedValues))
             except ValueError:
                 pass
         else:
@@ -110,8 +111,8 @@ def attr_args_from_snmp_type(mib_type: Asn1Type) -> dict[str, Any]:
             # Different flavours of integer then add a ValueRangeConstraint, and SNMP
             # objects can then apply their own range constraints. If we calculate the
             # intersection of these ranges, we can pass min and max values to Tango.
-            if all(isinstance(x, ValueRangeConstraint) for x in mib_type.subtypeSpec):
-                ranges = ((r.start, r.stop) for r in mib_type.subtypeSpec)
+            if all(isinstance(x, ValueRangeConstraint) for x in snmp_type.subtypeSpec):
+                ranges = ((r.start, r.stop) for r in snmp_type.subtypeSpec)
                 start, stop = reduce(_range_intersection, ranges)
                 attr_args.update(
                     min_value=start,
@@ -121,10 +122,14 @@ def attr_args_from_snmp_type(mib_type: Asn1Type) -> dict[str, Any]:
     return attr_args
 
 
-def _enum_from_named_values(named_values: NamedValues, cls=IntEnum) -> EnumMeta:
+def _enum_from_named_values(
+    named_values: NamedValues, cls: EnumMeta = IntEnum
+) -> EnumMeta:
     """
-    Create an Enum subclass from a NamedValues object, which is how PySNMP
-    represents SNMP INTEGER or BITS fields with enumerated named values.
+    Create an Enum subclass from a NamedValues object.
+
+    NamedValues is the class PySNMP uses to represent the named values
+    of an INTEGER or BITS object, if they are declared in the MIB.
     """
     enum_entries = {v: k for k, v in named_values.items()}
 
@@ -144,8 +149,9 @@ def _enum_from_named_values(named_values: NamedValues, cls=IntEnum) -> EnumMeta:
 
 def _range_intersection(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, int]:
     """
-    Calculate the intersection between ranges a and b defined as (start, end)
-    tuples with inclusive bounds. If they don't intersect, raise ValueError.
+    Return the intersection of ranges a and b, defined as (start, end) tuples.
+
+    Ranges are inclusive of their bounds. If they don't intersect, raise ValueError.
     """
     # pylint: disable=invalid-name
     c = max(a[0], b[0]), min(a[1], b[1])

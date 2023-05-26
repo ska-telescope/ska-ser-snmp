@@ -26,10 +26,8 @@ def load_device_definition(filename: str) -> Any:
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
-    """
-    Take a deserialised device definition structure, parse and validate it,
-    returning a list of SNMPAttrInfos describing the device attributes.
-    """
+    """Build attribute metadata from a deserialised device definition file."""
+
     # Keep this out of the loop so that we only create this thing once
     mib_builder = _create_mib_builder()
     return [
@@ -41,9 +39,11 @@ def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
 
 def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrInfo:
     """
-    Build a SNMPAttrInfo describing the provided attribute. Using the relevant
-    MIB files, inspect the SNMP type and construct appropriate arguments to
-    pass to tango.server.attribute().
+    Build a SNMPAttrInfo describing the provided attribute.
+
+    Using the relevant MIB files, we inspect the SNMP type and return
+    useful metadata about the attribute in an SNMPAttrInfo, including
+    suitable arguments to pass to tango.server.attribute().
     """
 
     # Pop off the values we're going to use in this function. The rest will
@@ -77,14 +77,10 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 
 
 def _create_mib_builder() -> MibBuilder:
-    """
-    This initialises a MibBuilder, which is the object we use to inspect the
-    SNMP MIB for the objects we're interested in, and use them to generate
-    our Tango attributes.
-    """
+    """Initialise a MibBuilder that knows where to look for MIBs."""
     mib_builder: MibBuilder = MibBuilder()
 
-    # This allows the builder to compile text MIBs into Python code
+    # Adding a compiler allows the builder to compile MIBs into Python code
     addMibCompiler(mib_builder)
     compiler: MibCompiler = mib_builder.getMibCompiler()
 
@@ -101,11 +97,15 @@ def _create_mib_builder() -> MibBuilder:
 
 def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
     """
-    Yields from a list of attribute definitions, expanding those that define
-    an "indexes" key. "indexes" is a list of N ranges [a, b], where a <= b.
-    One attribute definition will be yielded for each element (i1, ..., iN)
-    of the cartesian product of the provided ranges. The "name" field of each
-    attribute will be formatted with name.format(i1, ..., iN).
+    Yield templated copies of attr, based on the "indexes" key.
+
+    "indexes" should be a list of N ranges [a, b], where a <= b. One
+    attribute definition will be yielded for each element (i1, ..., iN)
+    of the cartesian product of the provided ranges. The "name" field
+    of each attribute will be formatted with name.format(i1, ..., iN).
+
+    If "indexes" is not present, attr will be yielded unmodified. This
+    function also performs some validation on the attribute definition.
     """
     suffix = attr["oid"][2:]
     indexes = attr.pop("indexes", [])
