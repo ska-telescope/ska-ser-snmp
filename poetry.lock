@@ -1502,6 +1502,21 @@ url = "https://artefact.skao.int/repository/pypi-internal/simple"
 reference = 'skao'
 
 [[package]]
+name = "snmpsim-lextudio"
+version = "1.0.1"
+description = "SNMP Simulator is a tool that acts as multitude of SNMP Agents built into real physical devices, from SNMP Manager's point of view. Simulator builds and uses a database of physical devices' SNMP footprints to respond like their original counterparts do."
+category = "dev"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "snmpsim_lextudio-1.0.1-py3-none-any.whl", hash = "sha256:f2d18f174991589f7e7b86620cceb5180e663293816bb445846e489926b6e2ae"},
+    {file = "snmpsim_lextudio-1.0.1.tar.gz", hash = "sha256:29e7bba12f3821d71001b4b212f4ad0013130401a8f4c2441f9091e4a77365ca"},
+]
+
+[package.dependencies]
+pysnmp-lextudio = ">=4.4.3"
+
+[[package]]
 name = "snowballstemmer"
 version = "2.2.0"
 description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
@@ -1883,4 +1898,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
-content-hash = "e6192d6192cebfa99cbf291116b1c585b39155c07ed7d9ab8665dfe98cc7d754"
+content-hash = "61f5610ceeac65d64bfa87af405db565d2da95d89f9062d845a080d7eb186282"

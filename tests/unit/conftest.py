@@ -1,8 +1,10 @@
 import queue
+import signal
 import time
 from contextlib import contextmanager
 from pathlib import Path
 from queue import SimpleQueue
+from subprocess import Popen
 from typing import Any, Generator
 
 import numpy as np
@@ -65,6 +67,21 @@ def expect_attribute(
         tango_device.unsubscribe_event(subscription_id)
 
 
+@pytest.fixture(scope="session")
+def simulator():
+    sim_process = Popen(
+        "snmpsim-command-responder "
+        "--data-dir resources/snmpsim_data "
+        "--agent-udpv4-endpoint=127.0.0.1:5161 "
+        "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim.db,dbtable:snmprec",
+        shell=True,
+    )
+    # TODO: wait until the socket is bound or something instead of sleeping
+    time.sleep(5)
+    yield
+    sim_process.send_signal(signal.SIGINT)
+
+
 @contextmanager
 def restore(
     dev: DeviceProxy, attr: str, setval: Any = object
@@ -81,7 +98,7 @@ def definition_path():
 
 
 @pytest.fixture
-def endpoint():
+def endpoint(simulator):
     return "127.0.0.1", 5161
 
 
@@ -100,9 +117,9 @@ def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
     )
     with ctx as dev:
         dev.adminMode = AdminMode.ONLINE
-        expect_attribute(dev, "State", DevState.ON, timeout=15)
+        expect_attribute(dev, "State", DevState.ON)
         assert dev.State() == DevState.ON
         yield dev
         dev.adminMode = AdminMode.OFFLINE
-        expect_attribute(dev, "State", DevState.DISABLE, timeout=15)
+        expect_attribute(dev, "State", DevState.DISABLE)
         assert dev.State() == DevState.DISABLE

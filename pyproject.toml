@@ -40,6 +40,7 @@ pytest-timeout = "^2.1.0"
 toml = "^0.10.2"
 pycodestyle = "^2.9.1"
 ska-tango-testing = "^0.4.0"
+snmpsim-lextudio = "^1.0.1"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2"
