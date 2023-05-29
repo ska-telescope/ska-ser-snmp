@@ -6,6 +6,11 @@ DOCS_SPHINXOPTS=-n -W --keep-going
 # better be verbose for debugging
 PYTHON_VARS_AFTER_PYTEST ?= -v
 
+# CI tests run as root; snmpsim doesn't want to run as root
+ifneq ($(CI_JOB_ID),)
+	export SKA_SNMP_DEVICE_SIMULATOR_USER = tango:tango
+endif
+
 -include PrivateRules.mak
 
 include .make/base.mk
@@ -30,6 +35,9 @@ docs-pre-build:
 
 python-post-lint:
 	mypy src/ tests/
+
+python-pre-test:
+	echo "$(SKA_SNMP_DEVICE_SIMULATOR_USER)"
 
 ### PYTHON END
 

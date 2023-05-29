@@ -1,3 +1,4 @@
+import os
 import queue
 import signal
 import time
@@ -9,6 +10,9 @@ from typing import Any, Generator
 
 import numpy as np
 import pytest
+from pysnmp.entity.engine import SnmpEngine
+from pysnmp.hlapi import CommunityData, ContextData, UdpTransportTarget, getCmd
+from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
 from ska_control_model import AdminMode
 from tango import DeviceProxy, DevState, EventData, EventType
 from tango.test_context import DeviceTestContext
@@ -69,17 +73,40 @@ def expect_attribute(
 
 @pytest.fixture(scope="session")
 def simulator():
-    sim_process = Popen(
-        "snmpsim-command-responder "
-        "--data-dir resources/snmpsim_data "
-        "--agent-udpv4-endpoint=127.0.0.1:5161 "
-        "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim.db,dbtable:snmprec",
-        shell=True,
-    )
-    # TODO: wait until the socket is bound or something instead of sleeping
-    time.sleep(5)
-    yield
-    sim_process.send_signal(signal.SIGINT)
+    if os.getenv("SKA_SNMP_DEVICE_SIMULATOR", True):
+        sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER")
+        if sim_user:
+            user, group = sim_user.split(":")
+            user_args = f"--process-user {user} --process-group {group} "
+        else:
+            user_args = ""
+        host, port = "127.0.0.1", 5161
+        sim_process = Popen(
+            f"snmpsim-command-responder {user_args}"
+            "--data-dir resources/snmpsim_data "
+            f"--agent-udpv4-endpoint={host}:{port} "
+            "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim.db,dbtable:snmprec",
+            shell=True,
+        )
+
+        # Wait until the server's active. Is there a better way?
+        try:
+            iterator = getCmd(
+                SnmpEngine(),
+                CommunityData("private"),
+                UdpTransportTarget((host, port), retries=10, timeout=0.5),
+                ContextData(),
+                ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
+            )
+            for error_indication, _, _, result in iterator:
+                if error_indication:
+                    raise error_indication
+            yield host, port
+        finally:
+            sim_process.send_signal(signal.SIGTERM)
+            sim_process.wait()
+    else:
+        yield None
 
 
 @contextmanager
@@ -98,8 +125,12 @@ def definition_path():
 
 
 @pytest.fixture
-def endpoint(simulator):
-    return "127.0.0.1", 5161
+def endpoint(simulator: tuple[str, int]) -> tuple[str, int]:
+    if simulator:
+        return simulator
+    else:
+        host, port = os.getenv("SKA_SNMP_DEVICE_TEST_ENDPOINT").split(":")
+        return host, int(port)
 
 
 @pytest.fixture

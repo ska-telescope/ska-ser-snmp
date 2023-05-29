@@ -20,12 +20,10 @@ def test_int(snmp_device):
         expect_attribute(snmp_device, "writeableInt", 10)
 
 
-def test_bits(snmp_device, endpoint):
-    host, _ = endpoint
-
+def test_bits(snmp_device, simulator):
     # Hack for EN6808-specific behaviour, where you can't
     # write [], so you set the 4 bit to clear all the others
-    setval = object if host == "127.0.0.1" else [4]
+    setval = object if simulator else [4]
 
     with restore(snmp_device, "bitEnum", setval=setval):
         snmp_device.bitEnum = [0]
