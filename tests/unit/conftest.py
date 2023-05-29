@@ -83,9 +83,9 @@ def simulator():
         host, port = "127.0.0.1", 5161
         sim_process = Popen(
             f"snmpsim-command-responder {user_args}"
-            "--data-dir resources/snmpsim_data "
+            "--data-dir tests/snmpsim_data "
             f"--agent-udpv4-endpoint={host}:{port} "
-            "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim.db,dbtable:snmprec",
+            "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
             shell=True,
         )
 
