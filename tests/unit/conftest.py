@@ -1,3 +1,4 @@
+import logging
 import os
 import queue
 import signal
@@ -40,7 +41,9 @@ def expect_attribute(
     :param timeout: the maximum time to wait, in seconds
     :return: True if the attribute has the expected value within the given timeout
     """
-    print(f"Expecting {tango_device.dev_name()}/{attr} == {value!r} within {timeout}s")
+    logging.debug(
+        f"Expecting {tango_device.dev_name()}/{attr} == {value!r} within {timeout}s"
+    )
     _queue: SimpleQueue[EventData] = SimpleQueue()
     subscription_id = tango_device.subscribe_event(
         attr,
@@ -54,11 +57,15 @@ def expect_attribute(
             event = _queue.get(timeout=deadline - time.time())
             current_value = event.attr_value.value
             if event.err:
-                print(f"Got {tango_device.dev_name()}/{attr} error {event.errors}")
+                logging.debug(
+                    f"Got {tango_device.dev_name()}/{attr} error {event.errors}"
+                )
             else:
-                print(f"Got {tango_device.dev_name()}/{attr} == {current_value!r}")
+                logging.debug(
+                    f"Got {tango_device.dev_name()}/{attr} == {current_value!r}"
+                )
                 if isinstance(current_value, np.ndarray):
-                    # an ndarray will raise if you compare it directly to a list
+                    # np.ndarray will raise if you compare it directly to a list/tuple
                     if type(value)(current_value) == value:
                         return True
                 elif current_value == value:
