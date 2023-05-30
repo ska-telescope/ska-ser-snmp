@@ -74,12 +74,6 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         # Writes accumulate here in between polls
         self._pending_writes: dict[tuple[str | int, ...], Any] = {}
 
-        # This will hold some PySNMP state that will persist
-        # for the lifetime of a single polling session
-        self._snmp_base_args: tuple[
-            SnmpEngine, CommunityData | UsmUserData, UdpTransportTarget, ContextData
-        ] | None = None
-
         # store the last time each attribute was successfully polled,
         # used to calculate when to poll again based on polling_period
         self._last_polled = {attr.identity: float("-inf") for attr in snmp_attributes}
