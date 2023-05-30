@@ -1,8 +1,8 @@
 import queue
 import random
 import string
-import time
 from enum import Enum
+from itertools import islice
 from queue import SimpleQueue
 
 import pytest
@@ -67,32 +67,38 @@ def test_constrained_int(snmp_device):
     assert attr_config.max_value == "3600"
 
 
-def test_polling_period(snmp_device):
-    pytest.skip("Doesn't work against simulator")
-    _queue: SimpleQueue[EventData] = SimpleQueue()
+def test_polling_period(snmp_device, simulator):
+    if simulator:
+        # These attrs map to SNMP objects - uptime and SNMP packets -
+        # that on a real device are always changing. On the simulator,
+        # they are static at the moment, so the test doesn't work.
+        pytest.skip("Doesn't work against simulator")
+
+    event_queue: SimpleQueue[EventData] = SimpleQueue()
 
     slow_id = snmp_device.subscribe_event(
         "slowPoller",
         EventType.CHANGE_EVENT,
-        _queue.put,
+        event_queue.put,
     )
     fast_id = snmp_device.subscribe_event(
         "fastPoller",
         EventType.CHANGE_EVENT,
-        _queue.put,
+        event_queue.put,
     )
-    time.sleep(10)
+
+    # capture ten events into fast and slow buckets
+    slow_events, fast_events = [
+        list(events)
+        for events in partition(
+            # for some reason, sometimes the attribute name is differently-cased
+            lambda ev: ev.attr_value.name.lower() == "fastpoller",
+            islice(iter_except(event_queue.get, queue.Empty), 10),
+        )
+    ]
+
     snmp_device.unsubscribe_event(slow_id)
     snmp_device.unsubscribe_event(fast_id)
 
-    # drain the captured events into two buckets
-    slow_events, fast_events = partition(
-        # for some reason, sometimes the attribute name is differently-cased
-        lambda ev: ev.attr_value.name.lower() == "fastpoller",
-        iter_except(_queue.get_nowait, queue.Empty),
-    )
-    slow_events, fast_events = list(slow_events), list(fast_events)
-
-    # This could fail if the SNMP agent is verrrryy slow
     assert len(fast_events) >= 7
-    assert len(slow_events) <= 2
+    assert len(slow_events) <= 3
