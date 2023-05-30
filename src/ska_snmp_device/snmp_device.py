@@ -17,6 +17,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     Port = device_property(dtype=int, default_value=161)
     Community = device_property(dtype=str, default_value="private")
     UpdateRate = device_property(dtype=float, default_value=2.0)
+    MaxObjectsPerSNMPCmd = device_property(dtype=int, default_value=24)
 
     def create_component_manager(self) -> SNMPComponentManager:
         """Create and return a component manager. Called during init_device()."""
@@ -35,6 +36,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             host=self.Host,
             port=self.Port,
             community=self.Community,
+            max_objects_per_pdu=self.MaxObjectsPerSNMPCmd,
             logger=self.logger,
             communication_state_callback=self._communication_state_changed,
             component_state_callback=self._component_state_changed,

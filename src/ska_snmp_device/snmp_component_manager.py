@@ -16,8 +16,6 @@ from ska_tango_base.poller import PollingComponentManager
 
 from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
-MAX_SNMP_OBJS = 24
-
 
 class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[ObjectType]]):
     # pylint: disable=too-many-instance-attributes
@@ -37,6 +35,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         host: str,
         port: int,
         community: str,
+        max_objects_per_pdu: int,
         logger: logging.Logger,
         communication_state_callback: CommunicationStatusCallbackType,
         component_state_callback: Callable[..., None],
@@ -67,6 +66,10 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         self._host = host
         self._port = port
         self._community = community
+
+        # This determines how many OIDs will be stuffed into an SNMP
+        # Protocol Data Unit, i.e. a single packet
+        self._max_objects_per_pdu = max_objects_per_pdu
 
         # Writes accumulate here in between polls
         self._pending_writes: dict[tuple[str | int, ...], Any] = {}
@@ -114,7 +117,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         """
         poll_response: list[ObjectType] = []
         for cmd, group in groupby(poll_request, self._snmp_cmd_for_obj):
-            for objs in chunked(group, MAX_SNMP_OBJS):
+            for objs in chunked(group, self._max_objects_per_pdu):
                 poll_response.extend(self._snmp_cmd(cmd, objs))
         return poll_response
 

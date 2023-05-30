@@ -43,6 +43,7 @@ def component_manager(endpoint):
             ),
         ],
         poll_rate=2.0,
+        max_objects_per_pdu=24,
     )
 
 
