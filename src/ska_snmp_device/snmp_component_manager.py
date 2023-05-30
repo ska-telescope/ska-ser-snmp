@@ -109,8 +109,13 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
         Aggregate any returned ObjectTypes from GET commands as the poll response.
         """
+
+        def _snmp_cmd_for_obj(obj: ObjectType) -> SNMPComponentManager.SNMPCmdFn:
+            val = obj._ObjectType__args[1]  # pylint: disable=protected-access
+            return getCmd if val is unSpecified else setCmd  # type: ignore
+
         poll_response: list[ObjectType] = []
-        for cmd, group in groupby(poll_request, self._snmp_cmd_for_obj):
+        for cmd, group in groupby(poll_request, _snmp_cmd_for_obj):
             for objs in chunked(group, self._max_objects_per_pdu):
                 poll_response.extend(self._snmp_cmd(cmd, objs))
         return poll_response
@@ -177,13 +182,6 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
             # setting, just wait for a poll to reflect the new reality.
             if cmd_fn is not setCmd:
                 yield from result
-
-    @staticmethod
-    def _snmp_cmd_for_obj(obj: ObjectType) -> SNMPCmdFn:
-        # pylint: disable=protected-access
-        val = obj._ObjectType__args[1]  # noqa
-        cmd: SNMPComponentManager.SNMPCmdFn = getCmd if val is unSpecified else setCmd
-        return cmd
 
     @staticmethod
     def _mib_symbolic(oid: ObjectIdentity) -> tuple[str | int, ...]:
