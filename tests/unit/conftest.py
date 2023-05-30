@@ -2,18 +2,15 @@ import logging
 import os
 import queue
 import signal
+import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
 from queue import SimpleQueue
-from subprocess import Popen
 from typing import Any, Generator
 
 import numpy as np
 import pytest
-from pysnmp.entity.engine import SnmpEngine
-from pysnmp.hlapi import CommunityData, ContextData, UdpTransportTarget, getCmd
-from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
 from ska_control_model import AdminMode
 from tango import DeviceProxy, DevState, EventData, EventType
 from tango.test_context import DeviceTestContext
@@ -84,31 +81,33 @@ def simulator():
         sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
             user, group = sim_user.split(":")
-            user_args = f"--process-user {user} --process-group {group} "
+            user_args = [f"--process-user={user}", f"--process-group={group}"]
         else:
-            user_args = ""
+            user_args = []
         host, port = "127.0.0.1", 5161
-        sim_process = Popen(
-            f"snmpsim-command-responder {user_args}"
-            "--data-dir tests/snmpsim_data "
-            f"--agent-udpv4-endpoint={host}:{port} "
-            "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
-            shell=True,
+        sim_process: Any = subprocess.Popen(  # Any because mypy seems to hate Popen
+            [
+                "snmpsim-command-responder",
+                *user_args,
+                "--data-dir=tests/snmpsim_data",
+                "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
+                f"--agent-udpv4-endpoint={host}:{port}",
+            ],
+            encoding="utf-8",
+            stderr=subprocess.PIPE,
         )
-
-        # Wait until the server's active. Is there a better way?
         try:
-            iterator = getCmd(
-                SnmpEngine(),
-                CommunityData("private"),
-                UdpTransportTarget((host, port), retries=10, timeout=0.5),
-                ContextData(),
-                ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
-            )
-            for error_indication, _, _, result in iterator:
-                if error_indication:
-                    raise error_indication
-            yield host, port
+            while sim_process.poll() is None:
+                line = sim_process.stderr.readline()
+                if line.startswith(f"  Listening at UDP/IPv4 endpoint {host}:{port}"):
+                    yield host, port
+                    break
+            else:
+                cmd = " ".join(sim_process.args)
+                return_code = sim_process.returncode
+                raise RuntimeError(
+                    f'Simulator command "{cmd}" exited with code {return_code} without ever listening'
+                )
         finally:
             sim_process.send_signal(signal.SIGTERM)
             sim_process.wait()
