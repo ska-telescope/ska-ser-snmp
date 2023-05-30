@@ -80,8 +80,8 @@ def expect_attribute(
 
 @pytest.fixture(scope="session")
 def simulator():
-    if os.getenv("SKA_SNMP_DEVICE_SIMULATOR", True):
-        sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER")
+    if os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip():
+        sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
             user, group = sim_user.split(":")
             user_args = f"--process-user {user} --process-group {group} "
@@ -136,7 +136,7 @@ def endpoint(simulator: tuple[str, int]) -> tuple[str, int]:
     if simulator:
         return simulator
     else:
-        host, port = os.getenv("SKA_SNMP_DEVICE_TEST_ENDPOINT").split(":")
+        host, port = os.getenv("SKA_SNMP_DEVICE_TEST_ENDPOINT").strip().split(":")
         return host, int(port)
 
 
