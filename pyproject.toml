@@ -16,12 +16,9 @@ license = "BSD 3-clause new license"
 python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
 pytango = "^9.4.1"
 PyYAML = "^6.0"
-numpy = "^1.23"
 ska-tango-base = "^0.18.1"
-ska-control-model = "^0.3.1"
 pysnmp-lextudio = "^5.0.27"
 more-itertools = "^9.1.0"
-types-pyyaml = "^6.0.12.10"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -41,6 +38,7 @@ toml = "^0.10.2"
 pycodestyle = "^2.9.1"
 ska-tango-testing = "^0.4.0"
 snmpsim-lextudio = "^1.0.1"
+types-pyyaml = "^6.0.12.10"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2"
