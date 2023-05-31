@@ -36,10 +36,26 @@ The most important Tango properties supported by SNMPDevice are:
 * `Port`, the port of the SNMP endpoint, which defaults to 161
 * `Community`, the SNMPv2 community name to use
 
+## Getting started with local development
+
+1. Clone this repo.
+2. Obtain a MIB file for the device you want to control.  
+   You can find MIBs on vendor websites, on
+   [mibs.pysnmp.com](https://github.com/lextudio/mibs.pysnmp.com/tree/master/asn1),
+   on http://www.circitor.fr or elsewhere on the internet. (Enlogic PDUs have a
+   link to download their MIB in their web admin interface - perhaps others too?)
+3. Write a device definition file (see below).
+4. Put your MIB in `resources/mibs`.  
+   This step can be skipped if the MIB is hosted on mibs.pysnmp.com, in which case
+   PySMI's MIB compiler should automatically download it.
+4. Determine the host, port and SNMP community of your SNMP device.
+5. Create your Tango device however you create Tango devices.  
+   Set the attributes Host, Port, Community and DeviceDefinition appropriately
+
 ## The device definition file syntax
 
-The following file defines a minimal device for an Enlogic EN6808 PDU, with
-attributes for reporting and setting the state of each of the 24 outlets.
+The following example defines a minimal device for an Enlogic EN6808 PDU,
+with attributes for reporting and setting the state of each of the 24 outlets.
 
 ```yaml
 attributes:
@@ -132,6 +148,11 @@ loop, which by default runs every two seconds.
 Setting `polling_period: 10000` means the object won't be queried any more
 frequently than once every 10 seconds. Setting it to `polling_period: .inf`
 means it will be polled only once.
+
+## Roadmap
+* Use BULK operations
+* Ability to generate Tango commands, not only attributes
+* SNMPv3
 
 ## More about MIBs and OIDs
 
