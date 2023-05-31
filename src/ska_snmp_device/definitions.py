@@ -7,8 +7,6 @@ import string
 from typing import Any, Generator
 
 import yaml
-from pysmi.compiler import MibCompiler
-from pysmi.reader import getReadersFromUrls
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
 from tango import AttrWriteType
@@ -80,17 +78,13 @@ def _create_mib_builder() -> MibBuilder:
     """Initialise a MibBuilder that knows where to look for MIBs."""
     mib_builder: MibBuilder = MibBuilder()
 
-    # Adding a compiler allows the builder to compile MIBs into Python code
-    addMibCompiler(mib_builder)
-    compiler: MibCompiler = mib_builder.getMibCompiler()
-
-    # If your MIB imports from "standard" SNMP MIBs, they need to be
-    # downloaded; PySNMP will not use its built-in pre-compiled MIBs as
-    # include sources when compiling. You can achieve this by adding
-    # "https://mibs.pysnmp.com/asn1/@mib@" as a source, but we don't want
-    # this package to require internet access. You can download these
-    # MIBs for manual inclusion by replacing "@mib@" with the MIB name.
-    compiler.addSources(*getReadersFromUrls("resources/mibs"))
+    # Adding a compiler allows the builder to fetch and compile novel MIBs.
+    # mibs.pysnmp.com is built from https://github.com/lextudio/mibs.pysnmp.com
+    # and contains thousands of standard MIBs and vendor MIBs for COTS hardware.
+    # Extra MIBs can be dropped in resources/mibs, which will be searched first.
+    addMibCompiler(
+        mib_builder, sources=["resources/mibs", "https://mibs.pysnmp.com/asn1/@mib@"]
+    )
 
     return mib_builder
 
