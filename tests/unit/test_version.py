@@ -5,4 +5,4 @@ import ska_low_itf_devices
 
 def test_version() -> None:
     """Test that the ska_low_itf_devices version is as expected."""
-    assert ska_low_itf_devices.__version__ == "0.0.1"
+    assert ska_low_itf_devices.__version__ == "0.1.0"
