@@ -11,11 +11,10 @@ from .types import SNMPAttrInfo
 
 
 class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
-    DeviceDefinition = device_property(dtype=str)
-    Model = device_property(dtype=str)
-    Host = device_property(dtype=str)
+    DeviceDefinition = device_property(dtype=str, mandatory=True)
+    Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
-    Community = device_property(dtype=str, default_value="private")
+    Community = device_property(dtype=str, mandatory=True)
     UpdateRate = device_property(dtype=float, default_value=2.0)
     MaxObjectsPerSNMPCmd = device_property(dtype=int, default_value=24)
 

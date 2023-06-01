@@ -148,6 +148,7 @@ def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
             DeviceDefinition=definition_path,
             Host=host,
             Port=port,
+            Community="private",
             LoggingLevelDefault=5,
             UpdateRate=0.5,
         ),
