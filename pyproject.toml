@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ska-low-itf-devices"
-version = "0.0.1"
+version = "0.1.0"
 description = "Python package for LOW ITF equipment tango devices"
 authors = ["Malte Marquarding <malte.marquarding@csiro.au>"]
 license = "BSD 3-clause new license"
