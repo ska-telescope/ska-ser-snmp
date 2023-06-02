@@ -12,7 +12,7 @@ def test_parse_definition_regression(definition_path):
     definition = load_device_definition(definition_path)
     attributes = parse_device_definition(definition)
     # TODO compare this properly to a baseline
-    assert len(attributes) == 8
+    assert len(attributes) == 9
 
 
 def test_expand_attribute_singular():

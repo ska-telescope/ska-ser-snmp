@@ -77,6 +77,7 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 def _create_mib_builder() -> MibBuilder:
     """Initialise a MibBuilder that knows where to look for MIBs."""
     mib_builder: MibBuilder = MibBuilder()
+    mib_builder.loadTexts = True
 
     # Adding a compiler allows the builder to fetch and compile novel MIBs.
     # mibs.pysnmp.com is built from https://github.com/lextudio/mibs.pysnmp.com

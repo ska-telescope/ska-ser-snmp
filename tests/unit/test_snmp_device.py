@@ -9,6 +9,8 @@ import pytest
 from more_itertools import iter_except, partition
 from tango import DevFailed, EventData, EventType
 
+from ska_snmp_device.types import _SNMP_ENUM_INVALID_PREFIX
+
 from .conftest import expect_attribute, restore
 
 
@@ -56,7 +58,31 @@ def test_enum(snmp_device):
 
 def test_enum_invalid(snmp_device):
     with pytest.raises(DevFailed, match="ValueError: Enum value 0"):
-        snmp_device.enumWithInvalid = 0
+        snmp_device.writeableEnumWithInvalid = 0
+
+
+def test_enum_nonsequential(snmp_device):
+    dtype = type(snmp_device.nonSequentialEnum)
+    expected = {
+        1: "temperature",
+        2: "humidity",
+        3: "doorSwitch",
+        4: "dryContact",
+        5: "spotFluid",
+        6: "ropeFluid",
+        7: "smoke",
+        8: "beacon",
+        9: "airVelocity",
+        17: "modbusAdapter",
+        18: "hidAdapter",
+        19: "eHandleAdapter",
+        25: "assetmodule",
+    }
+    for entry in dtype:
+        if entry.value in expected:
+            assert entry.name == expected[entry.value]
+        else:
+            assert entry.name == _SNMP_ENUM_INVALID_PREFIX + str(entry.value)
 
 
 def test_constrained_int(snmp_device):

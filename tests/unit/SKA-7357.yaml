@@ -2,6 +2,12 @@ attributes:
   - name: writeableEnum
     oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedStateOnStartup, 1, 1 ]
 
+  - name: writeableEnumWithInvalid
+    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1, 1 ]
+
+  - name: nonSequentialEnum
+    oid: [ ENLOGIC-PDU-MIB, pduExternalSensorNamePlateType, 1, 1 ]
+
   - name: writeableInt
     oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedConfigRebootDuration, 1, 1 ]
 
@@ -10,9 +16,6 @@ attributes:
 
   - name: writeableString
     oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedName, 1 , 1 ]
-
-  - name: enumWithInvalid
-    oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1, 1 ]
 
   - name: fastPoller
     oid: [ SNMPv2-MIB, snmpInPkts, 0 ]
