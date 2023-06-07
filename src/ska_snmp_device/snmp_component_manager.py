@@ -34,7 +34,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         self,
         host: str,
         port: int,
-        community: str,
+        authority: str | dict[str, str],
         max_objects_per_pdu: int,
         logger: logging.Logger,
         communication_state_callback: CommunicationStatusCallbackType,
@@ -65,7 +65,14 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         # Used to create our SNMP connection
         self._host = host
         self._port = port
-        self._community = community
+        if isinstance(authority, str):
+            self._access = CommunityData(authority)
+        else:
+            self._access = UsmUserData(
+                str(authority["auth"]),
+                authKey=str(authority["authKey"]),
+                privKey=str(authority["privKey"]),
+            )
 
         # This determines how many OIDs will be stuffed into an SNMP
         # Protocol Data Unit, i.e. a single packet
@@ -163,7 +170,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         """
         iterator = cmd_fn(
             SnmpEngine(),
-            CommunityData(self._community),
+            self._access,
             UdpTransportTarget((self._host, self._port)),
             ContextData(),
             *objects,

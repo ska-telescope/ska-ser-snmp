@@ -14,7 +14,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     DeviceDefinition = device_property(dtype=str, mandatory=True)
     Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
-    Community = device_property(dtype=str, mandatory=True)
+    Community = device_property(dtype=str)
     UpdateRate = device_property(dtype=float, default_value=2.0)
     MaxObjectsPerSNMPCmd = device_property(dtype=int, default_value=24)
 
@@ -31,10 +31,21 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             attr.name: attr for attr in dynamic_attrs
         }
 
+        if self.Community:
+            authority = self.Community
+        else:
+            # Alex- need to decide how we implement these three values
+            # Device Properties or file?
+            authority = {
+                "auth": "adminSNMP",
+                "authKey": "adminSNMPpass",
+                "privKey": "adminSNMPpass",
+            }
+
         return SNMPComponentManager(
             host=self.Host,
             port=self.Port,
-            community=self.Community,
+            authority=authority,
             max_objects_per_pdu=self.MaxObjectsPerSNMPCmd,
             logger=self.logger,
             communication_state_callback=self._communication_state_changed,
@@ -61,6 +72,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
 
             # Allow clients to subscribe to changes for this property
             self.set_change_event(name, True)
+            self.set_archive_event(name, True)
 
     def _dynamic_is_allowed(self, attr_name: str, _: AttReqType) -> bool:
         # pylint: disable=unused-argument
@@ -92,3 +104,4 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
         super()._component_state_changed(fault=fault, power=power)
         for name, value in kwargs.items():
             self.push_change_event(name, value)
+            self.push_archive_event(name, value)
