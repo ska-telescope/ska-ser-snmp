@@ -1,6 +1,4 @@
-"""
-Functions to handle parsing and validating device definition files.
-"""
+"""Functions to handle parsing and validating device definition files."""
 
 import itertools
 import string
@@ -17,15 +15,24 @@ from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
 def load_device_definition(filename: str) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
+
+    :param filename: the device definition filename
+
+    :return: the contexts of the filename
     """
-    with open(filename, encoding="utf-8") as def_file:
+    with open(filename, "r", encoding="utf-8") as def_file:
         # TODO here would be a good place for some schema validation
         return yaml.safe_load(def_file)
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
-    """Build attribute metadata from a deserialised device definition file."""
+    """
+    Build attribute metadata from a deserialised device definition file.
 
+    :param definition: a dictionary of device definitions
+
+    :return: a list of attribute information
+    """
     # Keep this out of the loop so that we only create this thing once
     mib_builder = _create_mib_builder()
     return [
@@ -42,8 +49,12 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     Using the relevant MIB files, we inspect the SNMP type and return
     useful metadata about the attribute in an SNMPAttrInfo, including
     suitable arguments to pass to tango.server.attribute().
-    """
 
+    :param mib_builder: a mib builder
+    :param attr: the attribute
+
+    :return: useful metadata about the attribute in an SNMPAttrInfo
+    """
     # Pop off the values we're going to use in this function. The rest will
     # be used as overrides to the generated tango.server.attribute() args.
     mib_name, symbol_name, *_ = oid = tuple(attr.pop("oid"))
@@ -75,7 +86,11 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 
 
 def _create_mib_builder() -> MibBuilder:
-    """Initialise a MibBuilder that knows where to look for MIBs."""
+    """
+    Initialise a MibBuilder that knows where to look for MIBs.
+
+    :return: a mib builder
+    """
     mib_builder: MibBuilder = MibBuilder()
 
     # Adding a compiler allows the builder to fetch and compile novel MIBs.
@@ -100,6 +115,12 @@ def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
 
     If "indexes" is not present, attr will be yielded unmodified. This
     function also performs some validation on the attribute definition.
+
+    :param attr: attribute definition
+
+    :yield: yields templated copies of attr
+
+    :raises ValueError: invalid format specifiers
     """
     suffix = attr["oid"][2:]
     indexes = attr.pop("indexes", [])
@@ -110,16 +131,19 @@ def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
     if indexes:
         if not replacements:
             raise ValueError(
-                f'Attribute name "{name}" contains no format specifiers, but defines an index'
+                f'Attribute name "{name}" contains no format specifiers,'
+                " but defines an index"
             )
     else:
         if replacements:
             raise ValueError(
-                f'Attribute name "{name}" contains format specifiers, but no indexes were provided'
+                f'Attribute name "{name}" contains format specifiers,'
+                " but no indexes were provided"
             )
         if not suffix:
             raise ValueError(
-                f'OID for attribute "{name}" must have a suffix - use 0 for a scalar object'
+                f'OID for attribute "{name}" must have a suffix'
+                " - use 0 for a scalar object"
             )
 
     index_ranges = (range(a, b + 1) for a, b in indexes)

@@ -1,3 +1,4 @@
+"""Unit tests for the snmp component manager."""
 import logging
 import time
 from typing import Any
@@ -10,7 +11,15 @@ from ska_snmp_device.types import SNMPAttrInfo
 
 
 @pytest.fixture
-def component_manager(endpoint):
+def component_manager(endpoint: tuple[str, int]) -> SNMPComponentManager:
+    """
+    Create a SNMP component manager fixture.
+
+    :param endpoint: the device )host,port)
+
+    :return: the component manager
+    """
+
     def comm_state_changed(comm_state: CommunicationStatus) -> None:
         pass
 
@@ -22,7 +31,7 @@ def component_manager(endpoint):
     return SNMPComponentManager(
         host=host,
         port=port,
-        community="public",
+        authority="public",
         logger=logging.getLogger(),
         communication_state_callback=comm_state_changed,
         component_state_callback=component_state_changed,
@@ -47,7 +56,14 @@ def component_manager(endpoint):
     )
 
 
-def test_component_manager_polling_periods(component_manager):
+def test_component_manager_polling_periods(
+    component_manager: SNMPComponentManager,
+) -> None:
+    """
+    Test the component .manager.
+
+    :param component_manager: SNMP component manager
+    """
     mgr = component_manager
     assert all(t == float("-inf") for t in mgr._last_polled.values())
 

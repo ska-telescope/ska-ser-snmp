@@ -1,3 +1,7 @@
+"""Generic SNMP device class."""
+
+from __future__ import annotations  # allow forward references in type hints
+
 from typing import Any
 
 from ska_control_model import CommunicationStatus, PowerState
@@ -11,6 +15,8 @@ from .types import SNMPAttrInfo
 
 
 class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
+    """SNMP device class."""
+
     DeviceDefinition = device_property(dtype=str, mandatory=True)
     Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
@@ -18,8 +24,12 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     UpdateRate = device_property(dtype=float, default_value=2.0)
     MaxObjectsPerSNMPCmd = device_property(dtype=int, default_value=24)
 
-    def create_component_manager(self) -> SNMPComponentManager:
-        """Create and return a component manager. Called during init_device()."""
+    def create_component_manager(self: SNMPDevice) -> SNMPComponentManager:
+        """
+        Create and return a component manager. Called during init_device().
+
+        :return: An SNMP component manager
+        """
         # This goes here because you don't have access to properties
         # until tango.server.BaseDevice.init_device() has been called
         dynamic_attrs = parse_device_definition(
@@ -54,7 +64,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             poll_rate=self.UpdateRate,
         )
 
-    def initialize_dynamic_attributes(self) -> None:
+    def initialize_dynamic_attributes(self: SNMPDevice) -> None:
         """Do what the name says. Called by Tango during init_device()."""
         for name, attr_info in self._dynamic_attrs.items():
             # partial(self._dynamic_is_allowed, name) doesn't work here
@@ -74,14 +84,14 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             self.set_change_event(name, True)
             self.set_archive_event(name, True)
 
-    def _dynamic_is_allowed(self, attr_name: str, _: AttReqType) -> bool:
+    def _dynamic_is_allowed(self: SNMPDevice, attr_name: str, _: AttReqType) -> bool:
         # pylint: disable=unused-argument
         return (
             self.component_manager.communication_state
             == CommunicationStatus.ESTABLISHED
         )
 
-    def _dynamic_get(self, attr: Attribute) -> None:
+    def _dynamic_get(self: SNMPDevice, attr: Attribute) -> None:
         # pylint: disable=protected-access
         val = self.component_manager._component_state[attr.get_name()]
         if val is None:
@@ -96,7 +106,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
         self.component_manager.enqueue_write(attr_name, value)
 
     def _component_state_changed(
-        self,
+        self: SNMPDevice,
         fault: bool | None = None,
         power: PowerState | None = None,
         **kwargs: dict[str, Any],

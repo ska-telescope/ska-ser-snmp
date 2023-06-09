@@ -1,3 +1,7 @@
+"""Class for component management."""
+
+from __future__ import annotations  # allow forward references in type hints
+
 import logging
 import time
 from itertools import groupby
@@ -18,6 +22,8 @@ from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
 
 class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[ObjectType]]):
+    """SNMP Component manager."""
+
     # pylint: disable=too-many-instance-attributes
     SNMPCmdFn = Callable[
         [
@@ -31,7 +37,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
     ]
 
     def __init__(  # noqa: D107
-        self,
+        self: SNMPComponentManager,
         host: str,
         port: int,
         authority: str | dict[str, str],
@@ -85,13 +91,15 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         # used to calculate when to poll again based on polling_period
         self._last_polled = {attr.identity: float("-inf") for attr in snmp_attributes}
 
-    def get_request(self) -> list[ObjectType]:
+    def get_request(self: SNMPComponentManager) -> list[ObjectType]:
         """
         Assemble a list of ObjectTypes representing pending writes and reads.
 
         The writes appear first, and come from `self._pending_writes`. Reads
         are requested for each attribute whose last successful poll happened
         longer ago than its polling period, and each attribute being written.
+
+        :return: a list of ObjectTypes
         """
         # atomically drain the write queue
         pending_writes = dict(iter_except(self._pending_writes.popitem, KeyError))
@@ -110,11 +118,17 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
         return [*writes, *reads]
 
-    def poll(self, poll_request: list[ObjectType]) -> list[ObjectType]:
+    def poll(
+        self: SNMPComponentManager, poll_request: list[ObjectType]
+    ) -> list[ObjectType]:
         """
         Group by writes and reads, chunk, and run the appropriate SNMP command.
 
         Aggregate any returned ObjectTypes from GET commands as the poll response.
+
+        :param poll_request: list of oid's to poll
+
+        :return: poll responses
         """
 
         def _snmp_cmd_for_obj(obj: ObjectType) -> SNMPComponentManager.SNMPCmdFn:
@@ -127,11 +141,15 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
                 poll_response.extend(self._snmp_cmd(cmd, objs))
         return poll_response
 
-    def poll_succeeded(self, poll_response: list[ObjectType]) -> None:
+    def poll_succeeded(
+        self: SNMPComponentManager, poll_response: list[ObjectType]
+    ) -> None:
         """
         Notify the device of the return values of a successful poll.
 
         This involves type coercion from PySNMP- to PyTango-compatible types.
+
+        :param poll_response: values from successful poll
         """
         super().poll_succeeded(poll_response)
         state_updates = {}
@@ -147,11 +165,14 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
 
         self._update_component_state(power=PowerState.ON, **state_updates)
 
-    def enqueue_write(self, attr_name: str, val: Any) -> None:
+    def enqueue_write(self: SNMPComponentManager, attr_name: str, val: Any) -> None:
         """
         Queue an attribute value to be written on the next poll.
 
         If there is already a write pending for the attribute, it will be superseded.
+
+        :param attr_name: the attribute name
+        :param val: the attribute value
         """
         # Tango DevEnums have to start at 0, but many SNMP enums start at 1.
         # So we add an "invalid" 0 value to the enum, and check for it here.
@@ -160,13 +181,20 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         self._pending_writes[attr.identity] = converted_value
 
     def _snmp_cmd(
-        self, cmd_fn: SNMPCmdFn, objects: Iterable[ObjectType]
+        self: SNMPComponentManager, cmd_fn: SNMPCmdFn, objects: Iterable[ObjectType]
     ) -> Generator[ObjectType, None, None]:
         """
         Execute the given SNMP command with the given objects.
 
         Yields each valued ObjectType in the response in the case of GET, and
         nothing in the case of SET. No other commands are currently supported.
+
+        :param cmd_fn: SNMP command
+        :param objects: list of objects
+
+        :raises error_indication: pysnmp errors
+
+        :yield: yields the result of commands on each valued ObjectType
         """
         iterator = cmd_fn(
             SnmpEngine(),
@@ -200,9 +228,13 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         is suitable to be unpacked as the arguments to ObjectIdentity.__init__().
 
         There's another complication when dealing with SNMP objects that aren't
-        part of a table (i.e. OIDs whose last segment is "0"). PySNMP returns
+        part of a table (i.e. OIDs whose last segment is "0". PySNMP returns
         these indexes as ObjectName, rather than Integer32. ObjectName is an
         iterable, which adds another level of nesting that we need to unroll.
+
+        :param oid: object identity
+
+        :return: flattened Mib
         """
         mib, name, indices = oid.getMibSymbol()
         indices = (y for x in indices for y in (x if isinstance(x, Iterable) else [x]))
