@@ -20,7 +20,10 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     DeviceDefinition = device_property(dtype=str, mandatory=True)
     Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
-    Community = device_property(dtype=str)
+    V2Community = device_property(dtype=str)
+    V3UserName = device_property(dtype=str)
+    V3AuthKey = device_property(dtype=str)
+    V3PrivKey = device_property(dtype=str)
     UpdateRate = device_property(dtype=float, default_value=2.0)
     MaxObjectsPerSNMPCmd = device_property(dtype=int, default_value=24)
 
@@ -41,15 +44,17 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             attr.name: attr for attr in dynamic_attrs
         }
 
-        if self.Community:
+        assert (self.V2Community and not self.V3UserName) or (
+            not self.V2Community and self.V3UserName
+        ), "Can't be V2 & V3 simultaneously"
+
+        if self.V2Community:
             authority = self.Community
         else:
-            # Alex- need to decide how we implement these three values
-            # Device Properties or file?
             authority = {
-                "auth": "adminSNMP",
-                "authKey": "adminSNMPpass",
-                "privKey": "adminSNMPpass",
+                "auth": self.V3UserName,
+                "authKey": self.V3AuthKey,
+                "privKey": self.V3PrivKey,
             }
 
         return SNMPComponentManager(
