@@ -9,9 +9,9 @@ from ska_tango_base import SKABaseDevice
 from tango import AttReqType, Attribute, AttrQuality, WAttribute
 from tango.server import attribute, device_property
 
-from .definitions import load_device_definition, parse_device_definition
-from .snmp_component_manager import SNMPComponentManager
-from .types import SNMPAttrInfo
+from ska_snmp_device.definitions import load_device_definition, parse_device_definition
+from ska_snmp_device.snmp_component_manager import SNMPComponentManager
+from ska_snmp_device.types import SNMPAttrInfo
 
 
 class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
@@ -44,12 +44,13 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             attr.name: attr for attr in dynamic_attrs
         }
 
+        print("<", self.V2Community,">","<", self.V3UserName,">")
         assert (self.V2Community and not self.V3UserName) or (
             not self.V2Community and self.V3UserName
         ), "Can't be V2 & V3 simultaneously"
 
         if self.V2Community:
-            authority = self.Community
+            authority = self.V2Community
         else:
             authority = {
                 "auth": self.V3UserName,
