@@ -99,7 +99,6 @@ def test_constrained_int(snmp_device: DeviceTestContext) -> None:
     attr_config = snmp_device.get_attribute_config("writeableConstrainedInt")
     assert attr_config.min_value == "0"
     assert attr_config.max_value == "3600"
-    assert False
 
 
 def test_polling_period(snmp_device: DeviceTestContext, simulator: Any) -> None:
