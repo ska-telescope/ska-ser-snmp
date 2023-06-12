@@ -44,7 +44,6 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             attr.name: attr for attr in dynamic_attrs
         }
 
-        print("<", self.V2Community,">","<", self.V3UserName,">")
         assert (self.V2Community and not self.V3UserName) or (
             not self.V2Community and self.V3UserName
         ), "Can't be V2 & V3 simultaneously"
