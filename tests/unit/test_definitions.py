@@ -1,4 +1,3 @@
-"""Unit tests for device definitions."""
 import pytest
 import yaml
 
@@ -9,20 +8,14 @@ from ska_snmp_device.definitions import (
 )
 
 
-def test_parse_definition_regression(definition_path: str) -> None:
-    """
-    Test parsing device definition file.
-
-    :param definition_path: definition filename
-    """
+def test_parse_definition_regression(definition_path):
     definition = load_device_definition(definition_path)
     attributes = parse_device_definition(definition)
     # TODO compare this properly to a baseline
     assert len(attributes) == 8
 
 
-def test_expand_attribute_singular() -> None:
-    """Test single attribute expansion."""
+def test_expand_attribute_singular():
     template = yaml.safe_load(
         """
     name: singular_attr_the_second
@@ -32,8 +25,7 @@ def test_expand_attribute_singular() -> None:
     assert [template] == list(_expand_attribute(template))
 
 
-def test_expand_attribute_indexed() -> None:
-    """Test indexed attribute expansion."""
+def test_expand_attribute_indexed():
     template = yaml.safe_load(
         """
     name: plural_attr_{}
@@ -57,8 +49,7 @@ def test_expand_attribute_indexed() -> None:
     assert expected == list(_expand_attribute(template))
 
 
-def test_expand_attribute_nested() -> None:
-    """Test nested attribute expansion."""
+def test_expand_attribute_nested():
     template = yaml.safe_load(
         """
     name: flipped_{1}_nested_{0}
@@ -85,8 +76,7 @@ def test_expand_attribute_nested() -> None:
     assert expected == list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_suffix() -> None:
-    """Test for missing attribute suffix."""
+def test_expand_attribute_missing_suffix():
     template = yaml.safe_load(
         """
     name: some_attribeaut
@@ -98,8 +88,7 @@ def test_expand_attribute_missing_suffix() -> None:
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_index() -> None:
-    """Test for missing attribute index."""
+def test_expand_attribute_missing_index():
     template = yaml.safe_load(
         """
     name: attriboot_{}
@@ -111,8 +100,7 @@ def test_expand_attribute_missing_index() -> None:
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_format() -> None:
-    """Test for missing attribute format."""
+def test_expand_attribute_missing_format():
     template = yaml.safe_load(
         """
     name: attribrackets
@@ -126,8 +114,7 @@ def test_expand_attribute_missing_format() -> None:
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_invalid_identifier() -> None:
-    """Test for invalid attribute identifier."""
+def test_expand_attribute_invalid_identifier():
     template = yaml.safe_load(
         """
     name: attriboat!

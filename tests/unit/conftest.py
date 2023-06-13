@@ -1,4 +1,3 @@
-"""fixtures for unit testing."""
 import logging
 import os
 import queue
@@ -37,9 +36,6 @@ def expect_attribute(
     :param attr: the name of the attribute to be monitored
     :param value: the attribute value we're waiting for
     :param timeout: the maximum time to wait, in seconds
-
-    :raises TimeoutError: tango timeout
-
     :return: True if the attribute has the expected value within the given timeout
     """
     logging.debug(
@@ -73,22 +69,14 @@ def expect_attribute(
                     return True
     except queue.Empty:
         raise TimeoutError(
-            f"{tango_device.dev_name()}/{attr} was not {value!r} within {timeout}s,"
-            f" last value was {current_value}"
+            f"{tango_device.dev_name()}/{attr} was not {value!r} within {timeout}s, last value was {current_value}"
         )
     finally:
         tango_device.unsubscribe_event(subscription_id)
 
 
-@pytest.fixture(scope="session", name="simulator")
-def simulator_fixture() -> Generator[Any, None, None]:
-    """
-    Create a simulator fixture.
-
-    :raises RuntimeError: simulator command failure
-
-    :yield: (host,port) or None
-    """
+@pytest.fixture(scope="session")
+def simulator():
     if os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip():
         sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
@@ -102,8 +90,7 @@ def simulator_fixture() -> Generator[Any, None, None]:
                 "snmpsim-command-responder",
                 *user_args,
                 "--data-dir=tests/snmpsim_data",
-                "--variation-module-options=sql:dbtype:sqlite3,"
-                "database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
+                "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
                 f"--agent-udpv4-endpoint={host}:{port}",
             ],
             encoding="utf-8",
@@ -119,8 +106,7 @@ def simulator_fixture() -> Generator[Any, None, None]:
                 cmd = " ".join(sim_process.args)
                 return_code = sim_process.returncode
                 raise RuntimeError(
-                    f'Simulator command "{cmd}" exited with code {return_code}'
-                    " without ever listening"
+                    f'Simulator command "{cmd}" exited with code {return_code} without ever listening'
                 )
         finally:
             sim_process.send_signal(signal.SIGTERM)
@@ -133,40 +119,19 @@ def simulator_fixture() -> Generator[Any, None, None]:
 def restore(
     dev: DeviceProxy, attr: str, setval: Any = object
 ) -> Generator[Any, None, None]:
-    """
-    Create a generator???.
-
-    :param dev: device proxy
-    :param attr: attribute
-    :param setval: value
-
-    :yield: attr
-    """
     old_val = getattr(dev, attr)
     yield old_val
     setattr(dev, attr, old_val if setval is object else setval)
     expect_attribute(dev, attr, old_val, timeout=15)
 
 
-@pytest.fixture(name="definition_path")
-def definition_path_fixture():
-    """
-    Return the device definition filename.
-
-    :return: the filename
-    """
+@pytest.fixture
+def definition_path():
     return Path(__file__).parent.resolve() / "SKA-7357.yaml"
 
 
-@pytest.fixture(name="endpoint")
-def endpoint_fixture(simulator: tuple[str, int]) -> tuple[str, int]:
-    """
-    Return the (host:port) from the simulator endpoint.
-
-    :param simulator: the simulator endpoint
-
-    :return: tuple containing host & port
-    """
+@pytest.fixture
+def endpoint(simulator: tuple[str, int]) -> tuple[str, int]:
     if simulator:
         return simulator
     else:
@@ -174,18 +139,8 @@ def endpoint_fixture(simulator: tuple[str, int]) -> tuple[str, int]:
         return host, int(port)
 
 
-@pytest.fixture(name="snmp_device")
-def snmp_device_fixture(
-    definition_path: str, endpoint: tuple[str, int]
-) -> Generator[DeviceTestContext, None, None]:
-    """
-    SNMP device fixture.
-
-    :param definition_path: configuration file
-    :param endpoint: host/port
-
-    :yield: a devicetestContext to the snmp device
-    """
+@pytest.fixture
+def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
     host, port = endpoint
     ctx = DeviceTestContext(
         SNMPDevice,

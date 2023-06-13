@@ -27,8 +27,6 @@ class BitEnum(IntEnum):
 
 @dataclass(frozen=True)
 class SNMPAttrInfo:
-    """Attribute definition created from yaml."""
-
     name: str
     identity: tuple[str | int, ...]
     attr_args: dict[str, Any]
@@ -37,14 +35,7 @@ class SNMPAttrInfo:
 
 
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
-    """
-    Coerce a PySNMP value to a PyTango-compatible Python type.
-
-    :param attr: the attribute info
-    :param value: SNMP value type
-
-    :return: a python type
-    """
+    """Coerce a PySNMP value to a PyTango-compatible Python type."""
     if isinstance(value, Integer):
         return int(value)
     if isinstance(value, Bits):
@@ -66,13 +57,6 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
     This has less work to do than snmp_to_python(), as PySNMP does a pretty
     good job of type coercion. We don't actually have to create an Asn1Type
     object here; that happens deep in the bowels of PySNMP.
-
-    :param attr: the attribute info
-    :param value: a python type
-
-    :raises ValueError: Enum value 0 is invalid.
-
-    :return: a snmp value type
     """
     if issubclass(attr.dtype, BitEnum):
         n_bytes = ceil(len(attr.dtype) / 8)
@@ -96,10 +80,6 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
 
     Currently only strings, enums, bits, and various kinds of ints are implemented,
     but adding more types will be a matter of adding more cases to this if statement.
-
-    :param snmp_type: an SNMP type
-
-    :return: kwargs to be passed to tango.server.attribute()
     """
     attr_args: dict[str, Any] = {}
     if isinstance(snmp_type, Bits):
@@ -150,13 +130,6 @@ def _enum_from_named_values(
 
     NamedValues is the class PySNMP uses to represent the named values
     of an INTEGER or BITS object, if they are declared in the MIB.
-
-    :param named_values: enum labels as NamedValues
-    :param cls: enum class
-
-    :raises ValueError: named values incompatible with Tango DevEnum
-
-    :return: the enum class created from NameValues
     """
     enum_entries = {v: k for k, v in named_values.items()}
 
@@ -179,13 +152,6 @@ def _range_intersection(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, in
     Return the intersection of ranges a and b, defined as (start, end) tuples.
 
     Ranges are inclusive of their bounds. If they don't intersect, raise ValueError.
-
-    :param a: a start/stop range
-    :param b: a start/stop range
-
-    :raises ValueError: Ranges {a} and {b} are disjoint
-
-    :return: tuple defining start and stop
     """
     # pylint: disable=invalid-name
     c = max(a[0], b[0]), min(a[1], b[1])
