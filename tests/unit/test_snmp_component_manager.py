@@ -22,7 +22,7 @@ def component_manager(endpoint):
     return SNMPComponentManager(
         host=host,
         port=port,
-        community="public",
+        authority="public",
         logger=logging.getLogger(),
         communication_state_callback=comm_state_changed,
         component_state_callback=component_state_changed,

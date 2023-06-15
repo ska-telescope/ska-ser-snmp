@@ -16,9 +16,9 @@ from pyasn1.type.constraint import ValueRangeConstraint
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
-from tango import AttrDataFormat
+from tango import AttrDataFormat, DevULong64
 
-_SNMP_ENUM_INVALID = "_SNMPEnum__INVALID__"
+_SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum__INVALID__"
 
 
 class BitEnum(IntEnum):
@@ -66,11 +66,10 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
         bytes_val = bytes(int_vals)
         return bytes_val
     if issubclass(attr.dtype, Enum):
-        if value == 0:
-            # I'd prefer to get enum labels directly from Tango, but I can't
-            # figure it an easy way, so we refer back to our attr args.
-            if attr.dtype(value).name == _SNMP_ENUM_INVALID:
-                raise ValueError(f"Enum value 0 for {attr.name} is invalid.")
+        # I'd prefer to get enum labels directly from Tango, but I can't
+        # figure it an easy way, so we refer back to our attr args.
+        if attr.dtype(value).name.startswith(_SNMP_ENUM_INVALID_PREFIX):
+            raise ValueError(f"Enum value {value} for {attr.name} is invalid.")
     return value
 
 
@@ -99,7 +98,9 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
         # other valid-but-unnamed values - true for the MIBs I've seen.
         if snmp_type.namedValues:
             try:
-                attr_args.update(dtype=_enum_from_named_values(snmp_type.namedValues))
+                attr_args.update(
+                    dtype=_enum_from_named_values(snmp_type.namedValues),
+                )
             except ValueError:
                 pass
         else:
@@ -118,6 +119,10 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
                     min_value=start,
                     max_value=stop,
                 )
+                # Stop-gap to support Counter64. Perhaps we should always
+                # specify the smallest compatible Tango int type?
+                if stop >= 2**63:
+                    attr_args["dtype"] = DevULong64
 
     return attr_args
 
@@ -131,20 +136,16 @@ def _enum_from_named_values(
     NamedValues is the class PySNMP uses to represent the named values
     of an INTEGER or BITS object, if they are declared in the MIB.
     """
-    enum_entries = {v: k for k, v in named_values.items()}
+    valued_names = {int_val: name for name, int_val in named_values.items()}
 
     # Tango DevEnum requires that values start at 0 and increment, but many
-    # SNMP enum values start at 1, so we bung in an "invalid" zero value in
-    # that case. A bit janky but it's an improvement on a bare int.
-    if 0 not in enum_entries:
-        enum_entries[0] = _SNMP_ENUM_INVALID
-
-    # test that entries are sequential
-    enum_sorted = [(v, k) for k, v in sorted(enum_entries.items())]
-    if all(x == i for i, (_, x) in enumerate(enum_sorted)):
-        return cls("SNMPEnum", enum_sorted)
-
-    raise ValueError("named values incompatible with Tango DevEnum")
+    # SNMP enum values start at 1, so we insert "invalid" entries in that
+    # case, and check for them when attributes are written.
+    enum_entries = [
+        (valued_names.get(x, _SNMP_ENUM_INVALID_PREFIX + str(x)), x)
+        for x in range(max(valued_names) + 1)
+    ]
+    return cls("SNMPEnum", enum_entries)
 
 
 def _range_intersection(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, int]:
