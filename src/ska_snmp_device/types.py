@@ -18,7 +18,7 @@ from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
 from tango import AttrDataFormat, DevULong64
 
-_SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum__INVALID__"
+_SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum_INVALID_"
 
 
 class BitEnum(IntEnum):
