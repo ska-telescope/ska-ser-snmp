@@ -55,7 +55,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             logger=self.logger,
             communication_state_callback=self._communication_state_changed,
             component_state_callback=self._component_state_changed,
-            snmp_attributes=dynamic_attrs,
+            attributes=dynamic_attrs,
             poll_rate=self.UpdateRate,
         )
 

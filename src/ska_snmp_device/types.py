@@ -18,6 +18,8 @@ from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
 from tango import AttrDataFormat, DevULong64
 
+from ska_low_itf_devices.attribute_polling_component_manager import AttrInfo
+
 _SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum_INVALID_"
 
 
@@ -26,12 +28,8 @@ class BitEnum(IntEnum):
 
 
 @dataclass(frozen=True)
-class SNMPAttrInfo:
-    name: str
+class SNMPAttrInfo(AttrInfo):
     identity: tuple[str | int, ...]
-    attr_args: dict[str, Any]
-    polling_period: float
-    dtype: type
 
 
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
