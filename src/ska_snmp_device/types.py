@@ -123,6 +123,8 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
                 # specify the smallest compatible Tango int type?
                 if stop >= 2**63:
                     attr_args["dtype"] = DevULong64
+                    if stop == 2**64 - 1:
+                        del attr_args["max_value"]
 
     return attr_args
 
