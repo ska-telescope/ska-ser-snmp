@@ -62,15 +62,10 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
     def initialize_dynamic_attributes(self) -> None:
         """Do what the name says. Called by Tango during init_device()."""
         for name, attr_info in self._dynamic_attrs.items():
-            # partial(self._dynamic_is_allowed, name) doesn't work here
-            # because Tango is too clever with the callback
-            def _dynamic_is_allowed(req: AttReqType, name: str = name) -> bool:
-                return self._dynamic_is_allowed(name, req)
-
             attr = attribute(
                 fget=self._dynamic_get,
                 fset=self._dynamic_set,
-                fisallowed=_dynamic_is_allowed,
+                fisallowed=self._dynamic_is_allowed,
                 **attr_info.attr_args,
             )
             self.add_attribute(attr)
@@ -79,7 +74,7 @@ class SNMPDevice(SKABaseDevice[SNMPComponentManager]):
             self.set_change_event(name, True)
             self.set_archive_event(name, True)
 
-    def _dynamic_is_allowed(self, attr_name: str, _: AttReqType) -> bool:
+    def _dynamic_is_allowed(self, attr_req_type: AttReqType) -> bool:
         # pylint: disable=unused-argument
         return (
             self.component_manager.communication_state
