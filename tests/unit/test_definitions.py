@@ -1,11 +1,8 @@
 import pytest
 import yaml
 
-from ska_snmp_device.definitions import (
-    _expand_attribute,
-    load_device_definition,
-    parse_device_definition,
-)
+from ska_low_itf_devices import load_device_definition
+from ska_snmp_device.definitions import _expand_attribute, parse_device_definition
 
 
 def test_parse_definition_regression(definition_path):

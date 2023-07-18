@@ -28,17 +28,19 @@ def component_manager(endpoint):
         component_state_callback=component_state_changed,
         attributes=[
             SNMPAttrInfo(
-                name="fast",
-                attr_args={},
+                attr_args=dict(
+                    name="fast",
+                    dtype=int,
+                ),
                 polling_period=0.5,
-                dtype=int,
                 identity=("MIB", "tastic", 1),
             ),
             SNMPAttrInfo(
-                name="slow",
-                attr_args={},
+                attr_args=dict(
+                    name="slow",
+                    dtype=int,
+                ),
                 polling_period=1.0,
-                dtype=int,
                 identity=("MIB", "tastic", 2),
             ),
         ],

@@ -6,21 +6,11 @@ import itertools
 import string
 from typing import Any, Generator
 
-import yaml
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
 from tango import AttrWriteType
 
 from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
-
-
-def load_device_definition(filename: str) -> Any:
-    """
-    Return the parsed contents of the YAML file at filename.
-    """
-    with open(filename, encoding="utf-8") as def_file:
-        # TODO here would be a good place for some schema validation
-        return yaml.safe_load(def_file)
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
@@ -64,13 +54,9 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     }
 
     return SNMPAttrInfo(
-        # named and dtype are duplicated here, but they're used a lot,
-        # so I grant them the rank of class member
-        name=attr_args["name"],
-        dtype=attr_args["dtype"],
-        identity=oid,
-        attr_args=attr_args,
         polling_period=polling_period,
+        attr_args=attr_args,
+        identity=oid,
     )
 
 

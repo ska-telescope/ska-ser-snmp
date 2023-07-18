@@ -1,11 +1,12 @@
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Sequence
+from functools import cached_property
+from typing import Any, Callable, Mapping, Sequence, cast
 
 from more_itertools import iter_except
-from ska_control_model import PowerState
-from ska_tango_base.base import CommunicationStatusCallbackType
+from ska_control_model import PowerState, TaskStatus
+from ska_tango_base.base import CommunicationStatusCallbackType, TaskCallbackType
 from ska_tango_base.poller import PollingComponentManager
 
 
@@ -20,10 +21,27 @@ AttrPollResponse = dict[str, Any]
 
 @dataclass(frozen=True)
 class AttrInfo:
-    name: str
+    """
+    Base class for dynamic attribute metadata.
+
+    :param attr_args: kwargs that will be passed to PyTango's
+        tango.server.attribute() function.
+
+    :param polling_period: the minimum time in seconds between
+        successive hardware reads for this attribute.
+    """
+
+    # pylint: disable=missing-function-docstring
     attr_args: dict[str, Any]
     polling_period: float
-    dtype: type
+
+    @cached_property
+    def dtype(self) -> Any:  # noqa: D102
+        return self.attr_args["dtype"]
+
+    @cached_property
+    def name(self) -> str:  # noqa: D102
+        return cast(str, self.attr_args["name"])
 
 
 class AttributePollingComponentManager(
@@ -118,3 +136,43 @@ class AttributePollingComponentManager(
         """
         # pylint: disable=unused-argument
         return val
+
+    def off(  # noqa: D102
+        self, task_callback: TaskCallbackType | None = None
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+            )
+
+    def standby(  # noqa: D102
+        self, task_callback: TaskCallbackType | None = None
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+            )
+
+    def on(  # noqa: D102
+        self, task_callback: TaskCallbackType | None = None
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+            )
+
+    def reset(  # noqa: D102
+        self, task_callback: TaskCallbackType | None = None
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+            )
+
+    def abort_commands(  # noqa: D102
+        self, task_callback: TaskCallbackType | None = None
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+            )

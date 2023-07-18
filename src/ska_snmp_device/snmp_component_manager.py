@@ -7,8 +7,7 @@ from pysnmp.hlapi import ContextData, UdpTransportTarget, getCmd, setCmd
 from pysnmp.hlapi.auth import CommunityData, UsmUserData
 from pysnmp.proto.errind import ErrorIndication
 from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
-from ska_control_model import TaskStatus
-from ska_tango_base.base import CommunicationStatusCallbackType, TaskCallbackType
+from ska_tango_base.base import CommunicationStatusCallbackType
 
 from ska_low_itf_devices.attribute_polling_component_manager import (
     AttributePollingComponentManager,
@@ -159,38 +158,3 @@ class SNMPComponentManager(AttributePollingComponentManager):
         mib, name, indices = oid.getMibSymbol()
         indices = (y for x in indices for y in (x if isinstance(x, Iterable) else [x]))
         return mib, name, *indices
-
-    def off(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def standby(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def on(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def reset(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def abort_commands(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
