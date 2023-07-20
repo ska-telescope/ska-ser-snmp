@@ -1,4 +1,5 @@
 from typing import Any
+import tango
 
 from tango.server import device_property
 
@@ -10,19 +11,8 @@ from ska_proxr_device.proxr_component_manager import (
 )
 
 
-def _build_attr_info(attr: dict[str, Any]) -> ProXRAttrInfo:
-    # pylint: disable=unused-argument
-    return ProXRAttrInfo(attr_args={}, polling_period=2.0)
-
-
-def parse_device_definition(definition: dict[str, Any]) -> list[ProXRAttrInfo]:
-    """Build attribute metadata from a deserialised device definition file."""
-    # pylint: disable=unused-argument
-    return []
-
-
 class ProXRDevice(AttributePollingDevice):
-    DeviceDefinition = device_property(dtype=str, mandatory=True)
+    NumberOfRelays = device_property(dtype=int, default_value=8)
     Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
     UpdateRate = device_property(dtype=float, default_value=2.0)
@@ -31,10 +21,17 @@ class ProXRDevice(AttributePollingDevice):
         """Create and return a component manager. Called during init_device()."""
         # This goes here because you don't have access to properties
         # until tango.server.BaseDevice.init_device() has been called
-        dynamic_attrs = parse_device_definition(
-            load_device_definition(self.DeviceDefinition)
-        )
-
+        dynamic_attrs = [
+            ProXRAttrInfo(
+                polling_period=self.UpdateRate,
+                attr_args={
+                    "name": ("R" + str(i)),
+                    "dtype": bool,
+                    "access": tango.AttrWrite.READ_WRITE,
+                },
+            )
+            for i in range(self.NumberOfRelays)
+        ]
         self._dynamic_attrs = {attr.name: attr for attr in dynamic_attrs}
 
         return ProXRComponentManager(
