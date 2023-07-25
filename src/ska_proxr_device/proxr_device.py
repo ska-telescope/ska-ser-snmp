@@ -1,9 +1,6 @@
-from typing import Any
 import tango
-
 from tango.server import device_property
 
-from ska_low_itf_devices import load_device_definition
 from ska_low_itf_devices.attribute_polling_device import AttributePollingDevice
 from ska_proxr_device.proxr_component_manager import (
     ProXRAttrInfo,
@@ -25,9 +22,9 @@ class ProXRDevice(AttributePollingDevice):
             ProXRAttrInfo(
                 polling_period=self.UpdateRate,
                 attr_args={
-                    "name": ("R" + str(i)),
+                    "name": "R" + str(i),
                     "dtype": bool,
-                    "access": tango.AttrWrite.READ_WRITE,
+                    "access": tango.AttrWriteType.READ_WRITE,
                 },
             )
             for i in range(self.NumberOfRelays)
