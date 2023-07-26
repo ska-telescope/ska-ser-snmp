@@ -1,9 +1,15 @@
-from enum import IntEnum
+import logging
 import socket
-from ska_ser_devices.client_server import TcpServer
 import threading
+from enum import IntEnum
+from typing import Iterator
 
-from ska_ser_devices.client_server import ApplicationServer, SentinelBytesMarshaller
+from ska_ser_devices.client_server import (
+    ApplicationServer,
+    SentinelBytesMarshaller,
+    TcpServer,
+)
+
 from ska_proxr_device.proxr_component_manager import (
     ProXRAttrInfo,
     ProXRComponentManager,
@@ -20,6 +26,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         self,
         host: str = socket.gethostname(),
         port: int = 5025,
+        logger: logging.Logger = logging.getLogger(),
         number_of_relays: int = 8,
     ):
         """
@@ -32,17 +39,54 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         self._host = host
         self._port = port
+        self._logger = logger
+        self._received_count = 0
 
-        for i in range(1, number_of_relays):
+        for i in range(1, number_of_relays + 1):
             relay = "R" + str(i)
             self._attributes[relay] = False
 
-        marshaller = SentinelBytesMarshaller("\r\n".encode())
         super().__init__(
-            marshaller.unmarshall,
-            marshaller.marshall,
+            self.unmarshall,
+            self.marshall,
             self.receive_send,
         )
+
+    def unmarshall(self, bytes_iterator: Iterator[bytes]) -> bytes:
+        payload = b""
+        more_bytes = next(bytes_iterator)
+        payload = payload + more_bytes
+
+        self._received_count += 1
+        print(
+            f"THE AMOUNT OF A TIMES A PACKET HAS BEEN RECEIVED: {self._received_count}"
+        )
+
+        header = 0xAA
+        # Look for header byte in the packet
+        while bytes([header]) not in payload:
+            self._logger.debug(
+                f"Unmarshaller received payload bytes {repr(more_bytes)}, "
+                f"has not yet encountered header byte {repr(header)}"
+            )
+            more_bytes = next(bytes_iterator)
+            payload = payload + more_bytes
+        else:
+            starting_idx = payload.index(0xAA)
+            length_of_packet = int(payload[starting_idx + 1])
+
+            # Add three to include the header, length of packet and checksum bytes
+            payload = payload[starting_idx : starting_idx + length_of_packet + 3]
+
+        self._logger.debug(
+            f"Unmarshaller received payload bytes {repr(more_bytes)}, "
+            f"encountered header {repr(header)}, "
+            f"returning {repr(payload)}"
+        )
+        return payload
+
+    def marshall(self, request: bytes) -> bytes:
+        return request
 
     def receive_send(self, request: bytes) -> bytes:
         """
@@ -52,6 +96,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         """
         relay, command = self.decode_command(request)
         relay_attribute_name = "R" + str(relay)
+        print(f"COMMAND: {command}, RELAY: {relay_attribute_name}")
 
         if command == ("READ"):
             status = self._attributes[relay_attribute_name]
@@ -64,7 +109,6 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
             payload = 0x55
         else:
             raise ValueError
-
         return self.prepare_payload([payload])
 
     def decode_command(self, request: bytes) -> tuple[int, str]:
@@ -98,7 +142,6 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         data_packet = header + data_packet
 
         checksum = sum(data_packet) & 255
-        print(data_packet + [checksum])
         payload = bytes(data_packet + [checksum])
         return payload
 
@@ -137,7 +180,7 @@ def main() -> None:
 if __name__ == "__main__":
     # t = ProXRSimulator(number_of_relays=8)
     # incoming_on = bytes([0xAA, 0x03, 0xFE, 0x6C, 0x01, 0x18])
-    # incoming_read = bytes([0xAA, 0x03, 0xFE, 0x74, 0x01, 0x20])
+    # incoming_read = bytes([0xAA, 0x03, 0xFE, 118, 0x01, 0x22])
     # response = t.receive_send(incoming_read)
     # print(response)
     # print(t._attributes)
