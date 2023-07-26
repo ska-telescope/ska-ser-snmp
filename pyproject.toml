@@ -8,6 +8,9 @@ version = "0.1.0"
 description = "Python package for LOW ITF equipment tango devices"
 authors = ["Malte Marquarding <malte.marquarding@csiro.au>"]
 license = "BSD 3-clause new license"
+packages = [
+    { include = "ska_snmp_device", from = "src" },
+]
 
 [tool.poetry.scripts]
 # tbd
