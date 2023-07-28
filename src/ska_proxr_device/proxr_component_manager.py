@@ -3,6 +3,7 @@ import socket
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
+import time
 from typing import Any, Callable, Generator, Mapping, Sequence
 from ska_ser_devices.client_server import ApplicationClient, TcpClient
 from ska_tango_base.base import CommunicationStatusCallbackType
@@ -13,8 +14,7 @@ from ska_low_itf_devices.attribute_polling_component_manager import (
     AttrPollRequest,
     AttrPollResponse,
 )
-
-from ska_proxr_device.utils import get_payload_by_command, process_read_status
+from ska_proxr_device.proxr_client import ProXRClient
 
 
 @dataclass(frozen=True)
@@ -23,13 +23,6 @@ class ProXRAttrInfo(AttrInfo):
 
 
 class ProXRComponentManager(AttributePollingComponentManager):
-    _attributes: Mapping[str, ProXRAttrInfo]
-
-    class _StartingHex(IntEnum):
-        READ = 0x73
-        ON = 0x6B
-        OFF = 0x63
-
     def __init__(  # noqa: D107
         self,
         host: str,
@@ -51,91 +44,40 @@ class ProXRComponentManager(AttributePollingComponentManager):
 
         self._host = host
         self._port = port
-        self._poll_count = 0
-
-    @contextmanager
-    def socket_context(
-        self, *args: Any, **kw: Any
-    ) -> Generator[socket.socket, None, None]:
-        """
-        Context manager for socket process when sending/receiving data.
-
-        """
-        sock = socket.socket(*args, **kw)
-        sock.connect((self._host, self._port))
-        sock.settimeout(0.5)
-        try:
-            yield sock
-        finally:
-            sock.close()
-
-    def send_command(
-        self,
-        sock,
-        payload: bytes,
-        expected_return_bytes: int = 4,
-    ) -> bytes:
-        """
-        Use the context manager to open a socket and send byte packets to the component.
-
-        :param socket: socket object for communication
-        :param payload: bytes packet containing the command
-        :param expected_return_bytes: expected return bytes, defaults to 4
-        :return: response packet from the packet
-        """
-        print(f"Sending the following payload through the socket: {payload}")
-        sock.sendall(payload)
-        response = sock.recv(expected_return_bytes)
-        return response
+        self._proxr_client = ProXRClient(self._host, self._port)
 
     def poll(self, poll_request: AttrPollRequest) -> AttrPollResponse:
         """
-        Group by writes and reads, chunk, and run the appropriate SNMP command.
+        Execute the poll based on the poll request. These are split into reads and writes.
 
-        Aggregate any returned ObjectTypes from GET commands as the poll response.
+        :param poll_request: A list of reads and dictionary of writes to be sent to the component.
+        :return: A dictionary with the results of the poll.
         """
 
-        state_updates: AttrPollResponse = {}
+        # Write requests
+        for relay, command in poll_request.writes.items():
+            bytes_request = self._proxr_client.bytes_request(
+                write_command=command,
+                relay_attribute=relay,
+            )
+            self.logger.info(
+                f"The following write payload is being sent to the component: {list(bytes_request)}"
+            )
+            response = self._proxr_client.send_request(request=bytes_request)
+            self.logger.info(f"The component sent the following response: {response}")
 
-        with self.socket_context(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            for relay, command in poll_request.writes.items():
-                relay_number = int(relay.replace("R", ""))
-                command = (
-                    self._StartingHex.ON if command is True else self._StartingHex.OFF
-                )
-                payload = get_payload_by_command(
-                    command=command, relay=relay_number, bank=1
-                )
-                self.logger.info(
-                    f"The following write payload is being sent to the component: {list(payload)}"
-                )
-                write_response = self.send_command(
-                    sock,
-                    payload=payload,
-                )
-                self.logger.info(
-                    f"The component sent the following response: {list(write_response)}"
-                )
-                # ... do some stuff with the poll_request.writes and poll_request.reads ...
-            for relay in poll_request.reads:
-                self._poll_count += 1
-                print(f"THE POLL COUNT IS: {self._poll_count}")
-                relay_number = int(relay.replace("R", ""))
-                payload = get_payload_by_command(
-                    command=self._StartingHex.READ, relay=relay_number, bank=1
-                )
-                self.logger.info(
-                    f"The following read payload is being sent to the component: {list(payload)}"
-                )
-                read_response = process_read_status(
-                    self.send_command(
-                        sock,
-                        payload=payload,
-                    )
-                )
-                self.logger.info(
-                    f"The component sent the following response: {read_response}"
-                )
-                state_updates[relay] = read_response
+        # Read requests
+        state_updates: AttrPollResponse = {}
+        for relay in poll_request.reads:
+            bytes_request = self._proxr_client.bytes_request(
+                write_command=None,
+                relay_attribute=relay,
+            )
+            self.logger.info(
+                f"The following read payload is being sent to the component: {list(bytes_request)}"
+            )
+            response = self._proxr_client.send_request(request=bytes_request)
+            self.logger.info(f"The component sent the following response: {response}")
+            state_updates[relay] = response
 
         return state_updates
