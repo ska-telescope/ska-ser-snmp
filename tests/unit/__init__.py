@@ -1,1 +1,1 @@
-"""This subpackage contains unit tests of ska-low-itf-devices."""
+"""This package contains tests of ska-low-itf-devices."""
