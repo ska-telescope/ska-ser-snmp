@@ -1,10 +1,11 @@
 import logging
 import socket
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
-import time
 from typing import Any, Callable, Generator, Mapping, Sequence
+
 from ska_ser_devices.client_server import ApplicationClient, TcpClient
 from ska_tango_base.base import CommunicationStatusCallbackType
 
@@ -54,30 +55,38 @@ class ProXRComponentManager(AttributePollingComponentManager):
         :return: A dictionary with the results of the poll.
         """
 
-        # Write requests
-        for relay, command in poll_request.writes.items():
-            bytes_request = self._proxr_client.bytes_request(
-                write_command=command,
-                relay_attribute=relay,
-            )
-            self.logger.info(
-                f"The following write payload is being sent to the component: {list(bytes_request)}"
-            )
-            response = self._proxr_client.send_request(request=bytes_request)
-            self.logger.info(f"The component sent the following response: {response}")
+        with self._proxr_client.socket_context(
+            socket.AF_INET, socket.SOCK_STREAM
+        ) as sock:
+            # Write requests
+            for relay, command in poll_request.writes.items():
+                bytes_request = self._proxr_client.bytes_request(
+                    write_command=command,
+                    relay_attribute=relay,
+                )
+                self.logger.info(
+                    f"The following write payload is being sent to the component: {list(bytes_request)}"
+                )
+                response = self._proxr_client.send_request(sock, request=bytes_request)
+                self.logger.info(
+                    f"The component sent the following response: {response}"
+                )
 
-        # Read requests
-        state_updates: AttrPollResponse = {}
-        for relay in poll_request.reads:
-            bytes_request = self._proxr_client.bytes_request(
-                write_command=None,
-                relay_attribute=relay,
-            )
-            self.logger.info(
-                f"The following read payload is being sent to the component: {list(bytes_request)}"
-            )
-            response = self._proxr_client.send_request(request=bytes_request)
-            self.logger.info(f"The component sent the following response: {response}")
-            state_updates[relay] = response
+            # Read requests
+            state_updates: AttrPollResponse = {}
+            for relay in poll_request.reads:
+                bytes_request = self._proxr_client.bytes_request(
+                    write_command=None,
+                    relay_attribute=relay,
+                )
+                self.logger.info(
+                    f"The following read payload is being sent to the component: {list(bytes_request)}"
+                )
+                response = self._proxr_client.send_request(sock, request=bytes_request)
+                self.logger.info(
+                    f"The component sent the following response: {response}"
+                )
+                status_byte = response[-2]
+                state_updates[relay] = bool(status_byte)
 
         return state_updates

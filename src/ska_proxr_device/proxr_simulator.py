@@ -1,5 +1,6 @@
 import logging
 import socket
+import socketserver
 import threading
 from enum import IntEnum
 from typing import Iterator
@@ -14,10 +15,21 @@ from ska_proxr_device.proxr_component_manager import (
     ProXRAttrInfo,
     ProXRComponentManager,
 )
+from ska_proxr_device.proxr_server import ProXRServer
 
 
 class ProXRSimulator(ApplicationServer[bytes, bytes]):
     class _CommandStartingHex(IntEnum):
+        """
+        The commands on the ProXR relay board are associated with specific
+        hex values. These hex values determine the nature of the request (read,
+        turn on/off) and the corresponding relay it relates to.
+
+        As there are 8 relay banks, we can partition ranges of hex
+        values for types of request. For example, the StartingHex.READ is mapped
+        to 0x73 and is associated with R1.
+        """
+
         READ = 0x73
         ON = 0x6B
         OFF = 0x63
@@ -30,18 +42,20 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         number_of_relays: int = 8,
     ):
         """
-        Initialise the simulator with the number of relays.
+        Initialise a ProXR simulator.
 
-        :param number_of_relays: number of relays on the relay board
+        :param host: the host address, defaults to socket.gethostname()
+        :param port: the port number, defaults to 5025
+        :param logger: a logger for debugging purposes, defaults to logging.getLogger()
+        :param number_of_relays: the number of relays on the relay board, defaults to 8
         """
-        self._lock = threading.Lock()
         self._attributes: dict[str, bool] = {}
 
         self._host = host
         self._port = port
         self._logger = logger
-        self._received_count = 0
 
+        # Set up relay attributes
         for i in range(1, number_of_relays + 1):
             relay = "R" + str(i)
             self._attributes[relay] = False
@@ -52,126 +66,91 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
             self.receive_send,
         )
 
-    def unmarshall(self, bytes_iterator: Iterator[bytes]) -> bytes:
-        payload = b""
-        more_bytes = next(bytes_iterator)
-        payload = payload + more_bytes
+    def unmarshall(self, payload: bytes) -> bytes:
+        """
+        Unmarshall the incoming payload.
 
-        self._received_count += 1
-        print(
-            f"THE AMOUNT OF A TIMES A PACKET HAS BEEN RECEIVED: {self._received_count}"
-        )
+        :param bytes_iterator: an iterator of bytestrings received by the
+            by the server
+        :return: the request packet in bytes
+        """
 
-        header = 0xAA
-        # Look for header byte in the packet
-        while bytes([header]) not in payload:
-            self._logger.debug(
-                f"Unmarshaller received payload bytes {repr(more_bytes)}, "
-                f"has not yet encountered header byte {repr(header)}"
-            )
-            more_bytes = next(bytes_iterator)
-            payload = payload + more_bytes
-        else:
-            starting_idx = payload.index(0xAA)
-            length_of_packet = int(payload[starting_idx + 1])
+        starting_idx = payload.index(0xAA)
+        length_of_packet = int(payload[starting_idx + 1])
 
-            # Add three to include the header, length of packet and checksum bytes
-            payload = payload[starting_idx : starting_idx + length_of_packet + 3]
+        request_idx = payload.index(0xFE)
+        # Add three to include the header, length of packet and checksum bytes
+        request = payload[request_idx : request_idx + length_of_packet]
 
-        self._logger.debug(
-            f"Unmarshaller received payload bytes {repr(more_bytes)}, "
-            f"encountered header {repr(header)}, "
-            f"returning {repr(payload)}"
-        )
-        return payload
-
-    def marshall(self, request: bytes) -> bytes:
         return request
+
+    def marshall(self, response_byte: bytes) -> bytes:
+        """
+        Prepend the header bytes and prepend the checksum byte.
+
+        :param response_byte: a response byte to be sent back to the client.
+        :return: full response bytes packet to be sent back to the client.
+        """
+        header = [0xAA, 0x01]
+
+        checksum = sum(header + [response_byte]) & 255
+        print(f"SENDING SIMULATOR STATUS AS: {header + [response_byte] + [checksum]}")
+        return bytes(header + [response_byte] + [checksum])
 
     def receive_send(self, request: bytes) -> bytes:
         """
-        Receive, process and respond to a bytes packet sent from the controller.
+        Update the simulator based on the unmarshalled request.
 
-        :return: bytes to be sent back to the controller
+        :param request: the request packet in bytes.
+        :raises ValueError: invalid command.
+        :return: the response byte to be sent back to the client.
         """
+
         relay, command = self.decode_command(request)
         relay_attribute_name = "R" + str(relay)
-        print(f"COMMAND: {command}, RELAY: {relay_attribute_name}")
+        print(f"REQUEST ON RELAY: {relay_attribute_name}, {command}")
 
         if command == ("READ"):
             status = self._attributes[relay_attribute_name]
-            payload = int(status)
+            response_byte = int(status)
         elif command == ("ON"):
             self._attributes[relay_attribute_name] = True
-            payload = 0x55
+            response_byte = 0x55
         elif command == ("OFF"):
             self._attributes[relay_attribute_name] = False
-            payload = 0x55
+            response_byte = 0x55
         else:
             raise ValueError
-        return self.prepare_payload([payload])
 
-    def decode_command(self, request: bytes) -> tuple[int, str]:
+        print(f"ATTRIBUTES: {self._attributes}")
+        return self.marshall(response_byte)
+
+    def decode_command(self, request_bytes: bytes) -> tuple[int, str]:
         """
-        Decode the bytes packet request.
+        Decode the request bytes to obtain the command (READ, ON, OFF) and relay.
 
-        :param request: incoming bytes packet request.
-        :return: tuple containing the corresponding relay and command.
+        :param request_bytes: full request packet in bytes.
+        :return: tuple containing the relay attribute and command to be executed.
         """
-        data_packet = self.validate_format(list(request))
-        command_code = data_packet[3]
+        print(f"THE REQUEST BYTES: {list(request_bytes)}")
+        cmd_idx = request_bytes.index(0xFE) + 1
+        cmd_code = request_bytes[cmd_idx]
 
-        # Loop through to find the command associated with
-        # the command code
+        # Loop through to find the command associated with the command code.
         for enum in self._CommandStartingHex:
             starting_hex_value = enum.value
-            if command_code > starting_hex_value:
-                relay = command_code - starting_hex_value
+            if cmd_code > starting_hex_value:
+                relay = cmd_code - starting_hex_value
                 command = enum.name
                 break
         return (relay, command)
 
-    def prepare_payload(self, data_packet: list[int]) -> bytes:
-        """
-        Prepend the header bytes and prepend the checksum byte.
-
-        :param data_packet: data packet containing command information
-        :return: full data packet to be sent back.
-        """
-        header = [0xAA, len(data_packet)]
-        data_packet = header + data_packet
-
-        checksum = sum(data_packet) & 255
-        payload = bytes(data_packet + [checksum])
-        return payload
-
-    def validate_format(self, data_packet: list[int]) -> list[int]:
-        """
-        .
-
-        :param data_packet: _description_
-        :raises ValueError: _description_
-        :return: _description_
-        """
-        length_of_packet = len(data_packet)
-        calculated_checksum = (
-            sum(data_packet[:-1]) & 255
-        )  # Exclude checksum in calculation
-
-        header = data_packet[0] == 0xAA
-        bytes_length = data_packet[1] == length_of_packet - 3
-        checksum = data_packet[-1] == calculated_checksum
-        if header and bytes_length and checksum:
-            pass
-        else:
-            raise ValueError("Invalid return bytes packet")
-
-        return data_packet
-
 
 def main() -> None:
     proxr_simulator = ProXRSimulator()
-    server = TcpServer("localhost", 5025, proxr_simulator)
+    server = ProXRServer(proxr_simulator.receive_send, ("localhost", 5025))
+    # with socketserver.TCPServer(("localhost", 5025), TCPHandler) as server:
+    # server = TcpServer("localhost", 5025, proxr_simulator)
     with server as s:
         print("oh we serving")
         s.serve_forever()

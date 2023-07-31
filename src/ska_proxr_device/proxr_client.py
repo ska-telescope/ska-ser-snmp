@@ -1,14 +1,12 @@
+import re
+import socket
 from contextlib import contextmanager
 from enum import IntEnum
-import socket
 from typing import Any, Generator
-
-from ska_proxr_device.utils import _StartingHex
-import re
 
 
 class ProXRClient:
-    class _StartingHex(IntEnum):
+    class _CommandStartingHex(IntEnum):
         """
         The commands on the ProXR relay board are associated with specific
         hex values. These hex values determine the nature of the request (read,
@@ -24,6 +22,12 @@ class ProXRClient:
         OFF = 0x63
 
     def __init__(self, host, port):
+        """
+        Initialise a ProXRClient.
+
+        :param host: the host address.
+        :param port: the port number.
+        """
         self._host = host
         self._port = port
 
@@ -85,16 +89,19 @@ class ProXRClient:
 
         if write_command is not None:
             hex_value = (
-                self._StartingHex.ON if write_command is True else self._StartingHex.OFF
+                self._CommandStartingHex.ON
+                if write_command is True
+                else self._CommandStartingHex.OFF
             )
         else:
-            hex_value = self._StartingHex.READ
+            hex_value = self._CommandStartingHex.READ
 
         bytes_request = [0xFE, hex_value + relay_number, bank]
         return self.marshall(bytes_request)
 
     def send_request(
         self,
+        sock,
         request: bytes,
         max_send_attempts: int = 3,
         buffer_size: int = 1024,
@@ -108,13 +115,15 @@ class ProXRClient:
         :return: the response payload from the component in bytes.
         """
 
-        attempts = 0
-        while attempts < max_send_attempts:
-            try:
-                with self.socket_context(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.sendall(request)
-                    response = sock.recv(buffer_size)
-                    break
-            except:
-                attempts += 1
-        return self.unmarshall(response)
+        sock.sendall(request)
+        return sock.recv(buffer_size)
+        # attempts = 0
+        # while attempts < max_send_attempts:
+        #     try:
+        #         with self.socket_context(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        #             sock.sendall(request)
+        #             response = sock.recv(buffer_size)
+        #             break
+        #     except:
+        #         attempts += 1
+        # return self.unmarshall(response)

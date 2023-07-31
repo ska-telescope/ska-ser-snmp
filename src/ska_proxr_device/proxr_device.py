@@ -1,9 +1,8 @@
 import logging
 import queue
 import time
-from contextlib import contextmanager
 from queue import SimpleQueue
-from typing import Any, Generator
+from typing import Any
 
 import numpy as np
 import tango
@@ -28,7 +27,7 @@ class ProXRDevice(AttributePollingDevice):
     def create_component_manager(self) -> ProXRComponentManager:
         """Create and return a component manager. Called during init_device()."""
         # This goes here because you don't have access to properties
-        # until tango.server.BaseDevice.init_device() has been called
+        # until tango.server.BaseDevice.init_device() has been
         dynamic_attrs = [
             ProXRAttrInfo(
                 polling_period=self.UpdateRate,
