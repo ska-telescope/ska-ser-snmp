@@ -1,13 +1,10 @@
 import logging
 import os
 import queue
-import signal
-import subprocess
+import threading
 import time
-from contextlib import contextmanager
-from pathlib import Path
 from queue import SimpleQueue
-from typing import Any, Generator
+from typing import Any
 
 import numpy as np
 import pytest
@@ -15,8 +12,7 @@ from ska_control_model import AdminMode
 from tango import DeviceProxy, DevState, EventData, EventType
 from tango.test_context import DeviceTestContext
 
-from ska_proxr_device.proxr_device import ProXRDevice
-from ska_snmp_device.snmp_device import SNMPDevice
+from ska_proxr_device import ProXRDevice, ProXRServer, ProXRSimulator
 
 
 def expect_attribute(
@@ -78,43 +74,22 @@ def expect_attribute(
 
 @pytest.fixture(scope="session")
 def simulator():
-    yield None
-    # if os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip():
-    #     sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
-    #     if sim_user:
-    #         user, group = sim_user.split(":")
-    #         user_args = [f"--process-user={user}", f"--process-group={group}"]
-    #     else:
-    #         user_args = []
-    #     host, port = "127.0.0.1", 5161
-    #     sim_process: Any = subprocess.Popen(  # Any because mypy seems to hate Popen
-    #         [
-    #             "snmpsim-command-responder",
-    #             *user_args,
-    #             "--data-dir=tests/snmpsim_data",
-    #             "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
-    #             f"--agent-udpv4-endpoint={host}:{port}",
-    #         ],
-    #         encoding="utf-8",
-    #         stderr=subprocess.PIPE,
-    #     )
-    #     try:
-    #         while sim_process.poll() is None:
-    #             line = sim_process.stderr.readline()
-    #             if line.startswith(f"  Listening at UDP/IPv4 endpoint {host}:{port}"):
-    #                 yield host, port
-    #                 break
-    #         else:
-    #             cmd = " ".join(sim_process.args)
-    #             return_code = sim_process.returncode
-    #             raise RuntimeError(
-    #                 f'Simulator command "{cmd}" exited with code {return_code} without ever listening'
-    #             )
-    #     finally:
-    #         sim_process.send_signal(signal.SIGTERM)
-    #         sim_process.wait()
-    # else:
-    #     yield None
+    if os.getenv("SKA_PROXR_DEVICE_SIMULATOR", "1").strip():
+        sim = ProXRSimulator()
+        server = ProXRServer(sim.receive_send, ("localhost", 0))
+        with server:
+            server_thread = threading.Thread(
+                name="ProXR relay simulator thread",
+                target=server.serve_forever,
+            )
+            try:
+                server_thread.start()
+                yield server.server_address
+            finally:
+                server.shutdown()
+
+    else:
+        yield None
 
 
 @pytest.fixture
@@ -127,24 +102,28 @@ def endpoint(simulator: tuple[str, int]) -> tuple[str, int]:
 
 
 @pytest.fixture
-def proxr_context(endpoint: tuple[str, int]):
+def proxr_device(endpoint: tuple[str, int], number_of_relays: int) -> DeviceProxy:
     host, port = endpoint
     ctx = DeviceTestContext(
         ProXRDevice,
         properties=dict(
-            NumberOfRelays=8,
+            NumberOfRelays=number_of_relays,
             Host=host,
             Port=port,
             LoggingLevelDefault=5,
             UpdateRate=0.5,
         ),
     )
-    return ctx
-    # with ctx as dev:
-    #     dev.adminMode = AdminMode.ONLINE
-    #     expect_attribute(dev, "State", DevState.ON)
-    #     assert dev.State() == DevState.ON
-    #     yield dev
-    #     dev.adminMode = AdminMode.OFFLINE
-    #     expect_attribute(dev, "State", DevState.DISABLE)
-    #     assert dev.State() == DevState.DISABLE
+    with ctx as dev:
+        dev.adminMode = AdminMode.ONLINE
+        expect_attribute(dev, "State", DevState.ON)
+        assert dev.State() == DevState.ON
+        yield dev
+        dev.adminMode = AdminMode.OFFLINE
+        expect_attribute(dev, "State", DevState.DISABLE)
+        assert dev.State() == DevState.DISABLE
+
+
+@pytest.fixture
+def number_of_relays() -> int:
+    return 8
