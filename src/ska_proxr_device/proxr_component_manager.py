@@ -1,12 +1,7 @@
 import logging
 import socket
-import time
-from contextlib import contextmanager
-from dataclasses import dataclass
-from enum import IntEnum
-from typing import Any, Callable, Generator, Mapping, Sequence
+from typing import Callable, Sequence
 
-from ska_ser_devices.client_server import ApplicationClient, TcpClient
 from ska_tango_base.base import CommunicationStatusCallbackType
 
 from ska_low_itf_devices.attribute_polling_component_manager import (
@@ -18,11 +13,6 @@ from ska_low_itf_devices.attribute_polling_component_manager import (
 from ska_proxr_device.proxr_client import ProXRClient
 
 
-@dataclass(frozen=True)
-class ProXRAttrInfo(AttrInfo):
-    pass
-
-
 class ProXRComponentManager(AttributePollingComponentManager):
     def __init__(  # noqa: D107
         self,
@@ -31,7 +21,7 @@ class ProXRComponentManager(AttributePollingComponentManager):
         logger: logging.Logger,
         communication_state_callback: CommunicationStatusCallbackType,
         component_state_callback: Callable[..., None],
-        attributes: Sequence[ProXRAttrInfo],
+        attributes: Sequence[AttrInfo],
         poll_rate: float,
     ):
         # pylint: disable=too-many-arguments
@@ -69,7 +59,7 @@ class ProXRComponentManager(AttributePollingComponentManager):
                 )
                 response = self._proxr_client.send_request(sock, request=bytes_request)
                 self.logger.info(
-                    f"The component sent the following response: {response}"
+                    f"The component sent the following response: {list(response)}"
                 )
 
             # Read requests
@@ -84,7 +74,7 @@ class ProXRComponentManager(AttributePollingComponentManager):
                 )
                 response = self._proxr_client.send_request(sock, request=bytes_request)
                 self.logger.info(
-                    f"The component sent the following response: {response}"
+                    f"The component sent the following response: {list(response)}"
                 )
                 status_byte = response[-2]
                 state_updates[relay] = bool(status_byte)

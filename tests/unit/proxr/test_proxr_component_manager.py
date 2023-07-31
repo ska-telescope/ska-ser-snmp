@@ -5,12 +5,8 @@ from typing import Any
 import pytest
 from ska_control_model import CommunicationStatus
 
-from ska_proxr_device.proxr_component_manager import (
-    ProXRAttrInfo,
-    ProXRComponentManager,
-)
-from ska_snmp_device.snmp_component_manager import SNMPComponentManager
-from ska_snmp_device.types import SNMPAttrInfo
+from ska_low_itf_devices.attribute_polling_component_manager import AttrInfo
+from ska_proxr_device.proxr_component_manager import ProXRComponentManager
 
 
 @pytest.fixture
@@ -30,14 +26,14 @@ def component_manager(endpoint):
         communication_state_callback=comm_state_changed,
         component_state_callback=component_state_changed,
         attributes=[
-            ProXRAttrInfo(
+            AttrInfo(
                 attr_args=dict(
                     name="fast",
                     dtype=int,
                 ),
                 polling_period=0.5,
             ),
-            ProXRAttrInfo(
+            AttrInfo(
                 attr_args=dict(
                     name="slow",
                     dtype=int,

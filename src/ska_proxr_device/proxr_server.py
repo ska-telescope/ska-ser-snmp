@@ -1,27 +1,33 @@
 import socketserver
 from collections.abc import Callable
-from socketserver import BaseRequestHandler
-from typing import Iterator, Optional
-from ska_ser_devices.client_server.tcp import _TcpBytestringIterator
+from typing import Optional
 
 
 class TCPHandler(socketserver.BaseRequestHandler):
-    def handle(self):
+    def handle(self) -> None:
+        """Handle multiple client requests."""
         while True:
             data = self.request.recv(1024)
-            print(f"DATA FROM HANDLER: {data}")
             if not data:
                 break
-            response = self.server.application_callback(data)
+            response = self.server.application_callback(  # type:ignore[attr-defined]
+                data
+            )
             self.request.sendall(response)
 
 
 class ProXRServer(socketserver.TCPServer):
     def __init__(
         self,
-        application_callback: Callable[[Iterator[bytes]], Optional[bytes]],
+        application_callback: Callable[[bytes], Optional[bytes]],
         server_address: tuple[str, int],
-        bind_and_activate: bool = True,
     ) -> None:
+        """
+        Initialise the server.
+
+        :param application_callback: backend callback.
+        :param server_address: host and port values.
+
+        """
         self.application_callback = application_callback
-        super().__init__(server_address, TCPHandler, bind_and_activate)
+        super().__init__(server_address, TCPHandler)

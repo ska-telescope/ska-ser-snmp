@@ -1,26 +1,17 @@
 import logging
 import socket
-import socketserver
-import threading
 from enum import IntEnum
-from typing import Iterator
 
-from ska_ser_devices.client_server import (
-    ApplicationServer,
-    SentinelBytesMarshaller,
-    TcpServer,
-)
+from ska_ser_devices.client_server import ApplicationServer
 
-from ska_proxr_device.proxr_component_manager import (
-    ProXRAttrInfo,
-    ProXRComponentManager,
-)
 from ska_proxr_device.proxr_server import ProXRServer
 
 
 class ProXRSimulator(ApplicationServer[bytes, bytes]):
     class _CommandStartingHex(IntEnum):
         """
+        Mapping to help obtain the hex value of commands.
+
         The commands on the ProXR relay board are associated with specific
         hex values. These hex values determine the nature of the request (read,
         turn on/off) and the corresponding relay it relates to.
@@ -28,6 +19,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         As there are 8 relay banks, we can partition ranges of hex
         values for types of request. For example, the StartingHex.READ is mapped
         to 0x73 and is associated with R1.
+
         """
 
         READ = 0x73
@@ -61,7 +53,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
             self._attributes[relay] = False
 
         super().__init__(
-            self.unmarshall,
+            self.unmarshall,  # type:ignore[arg-type]
             self.marshall,
             self.receive_send,
         )
@@ -84,7 +76,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         return request
 
-    def marshall(self, response_byte: bytes) -> bytes:
+    def marshall(self, response: bytes) -> bytes:
         """
         Prepend the header bytes and prepend the checksum byte.
 
@@ -93,9 +85,8 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         """
         header = [0xAA, 0x01]
 
-        checksum = sum(header + [response_byte]) & 255
-        print(f"SENDING SIMULATOR STATUS AS: {header + [response_byte] + [checksum]}")
-        return bytes(header + [response_byte] + [checksum])
+        checksum = sum(header + list(response)) & 255
+        return bytes(header + list(response) + [checksum])
 
     def receive_send(self, request: bytes) -> bytes:
         """
@@ -107,23 +98,22 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         """
 
         relay, command = self.decode_command(request)
-        relay_attribute_name = "R" + str(relay)
+        relay_attribute_name = f"R{relay}"
         print(f"REQUEST ON RELAY: {relay_attribute_name}, {command}")
 
         if command == ("READ"):
             status = self._attributes[relay_attribute_name]
-            response_byte = int(status)
+            response = [int(status)]
         elif command == ("ON"):
             self._attributes[relay_attribute_name] = True
-            response_byte = 0x55
+            response = [0x55]
         elif command == ("OFF"):
             self._attributes[relay_attribute_name] = False
-            response_byte = 0x55
+            response = [0x55]
         else:
             raise ValueError
 
-        print(f"ATTRIBUTES: {self._attributes}")
-        return self.marshall(response_byte)
+        return self.marshall(bytes(response))
 
     def decode_command(self, request_bytes: bytes) -> tuple[int, str]:
         """
@@ -147,20 +137,12 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
 
 def main() -> None:
+    """Run socketserver."""
     proxr_simulator = ProXRSimulator()
     server = ProXRServer(proxr_simulator.receive_send, ("localhost", 5025))
-    # with socketserver.TCPServer(("localhost", 5025), TCPHandler) as server:
-    # server = TcpServer("localhost", 5025, proxr_simulator)
-    with server as s:
-        print("oh we serving")
-        s.serve_forever()
+    with server:
+        server.serve_forever()
 
 
 if __name__ == "__main__":
-    # t = ProXRSimulator(number_of_relays=8)
-    # incoming_on = bytes([0xAA, 0x03, 0xFE, 0x6C, 0x01, 0x18])
-    # incoming_read = bytes([0xAA, 0x03, 0xFE, 118, 0x01, 0x22])
-    # response = t.receive_send(incoming_read)
-    # print(response)
-    # print(t._attributes)
     main()
