@@ -7,7 +7,7 @@ from typing import Any, Generator
 class ProXRClient:
     """Client for sending/receiving ProXR byte payloads to from a server."""
 
-    class _CommandStartingHex(IntEnum):
+    class _HexValues(IntEnum):
         """
         Mapping to help obtain the hex value of commands.
 
@@ -20,6 +20,9 @@ class ProXRClient:
         to 0x73 and is associated with R1.
 
         """
+
+        HEADER = 0xAA
+        REQUEST_HEADER = 0xFE
 
         READ = 0x73
         ON = 0x6B
@@ -59,7 +62,7 @@ class ProXRClient:
         :param bytes_request: the request portion of the payload in bytes.
         :return: the full payload with header and checksum types.
         """
-        header = [0xAA, len(bytes_request)]
+        header = [self._HexValues.HEADER.value, len(bytes_request)]
         checksum = sum(header + bytes_request) & 255
 
         return bytes(header + bytes_request + [checksum])
@@ -72,14 +75,12 @@ class ProXRClient:
         """
         if write_command is not None:
             hex_value = (
-                self._CommandStartingHex.ON
-                if write_command is True
-                else self._CommandStartingHex.OFF
+                self._HexValues.ON if write_command is True else self._HexValues.OFF
             )
         else:
-            hex_value = self._CommandStartingHex.READ
+            hex_value = self._HexValues.READ
 
-        bytes_request = [0xFE, hex_value + relay, bank]
+        bytes_request = [self._HexValues.REQUEST_HEADER.value, hex_value + relay, bank]
         return self.marshall(bytes_request)
 
     def send_request(

@@ -8,7 +8,7 @@ from .proxr_server import ProXRServer
 
 
 class ProXRSimulator(ApplicationServer[bytes, bytes]):
-    class _CommandStartingHex(IntEnum):
+    class _HexValues(IntEnum):
         """
         Mapping to help obtain the hex value of commands.
 
@@ -22,9 +22,14 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         """
 
+        HEADER = 0xAA
+        MSG_HEADER = 0xFE
+
         READ = 0x73
         ON = 0x6B
         OFF = 0x63
+
+        SUCCESSFUL_WRITE = 0x55
 
     def __init__(
         self,
@@ -66,10 +71,10 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         :return: the request packet in bytes.
         """
 
-        starting_idx = payload.index(0xAA)
+        starting_idx = payload.index(self._HexValues.HEADER.value)
         length_of_packet = int(payload[starting_idx + 1])
 
-        response_idx = payload.index(0xFE)
+        response_idx = payload.index(self._HexValues.MSG_HEADER.value)
         # Add three to include the header, length of packet and checksum bytes
         response = payload[response_idx : response_idx + length_of_packet]
 
@@ -82,7 +87,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         :param response_byte: a response byte to be sent back to the client.
         :return: full response bytes packet to be sent back to the client.
         """
-        header = [0xAA, 0x01]
+        header = [self._HexValues.HEADER.value, 0x01]
 
         checksum = sum(header + list(response)) & 255
         return bytes(header + list(response) + [checksum])
@@ -104,10 +109,10 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
             response = [int(status)]
         elif command == ("ON"):
             self._attributes[relay_attribute_name] = True
-            response = [0x55]
+            response = [self._HexValues.SUCCESSFUL_WRITE.value]
         elif command == ("OFF"):
             self._attributes[relay_attribute_name] = False
-            response = [0x55]
+            response = [self._HexValues.SUCCESSFUL_WRITE.value]
         else:
             raise ValueError
 
@@ -120,11 +125,11 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         :param request_bytes: full request packet in bytes.
         :return: tuple containing the relay attribute and command to be executed.
         """
-        cmd_idx = request_bytes.index(0xFE) + 1
+        cmd_idx = request_bytes.index(self._HexValues.MSG_HEADER.value) + 1
         cmd_code = request_bytes[cmd_idx]
 
         # Loop through to find the command associated with the command code.
-        for enum in self._CommandStartingHex:
+        for enum in self._HexValues:
             starting_hex_value = enum.value
             if cmd_code > starting_hex_value:
                 relay = cmd_code - starting_hex_value
