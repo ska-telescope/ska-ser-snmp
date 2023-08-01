@@ -76,9 +76,9 @@ def expect_attribute(
 
 @pytest.fixture(scope="session")
 def simulator():
-    if os.getenv("SKA_PROXR_DEVICE_SIMULATOR", "1").strip():
+    if int(os.getenv("SKA_PROXR_DEVICE_SIMULATOR", "1").strip()):
         sim = ProXRSimulator()
-        server = ProXRServer(sim.receive_send, ("localhost", 0))
+        server = ProXRServer(sim.receive_send, ("127.0.0.1", 0))
         with server:
             server_thread = threading.Thread(
                 name="ProXR relay simulator thread",

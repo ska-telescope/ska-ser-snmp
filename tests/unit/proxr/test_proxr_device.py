@@ -1,7 +1,7 @@
 from .conftest import expect_attribute
 
 
-def test_switching(proxr_device, number_of_relays):
+def switching_all_relays(proxr_device, number_of_relays):
     """
     Switch all relays on the device
 
