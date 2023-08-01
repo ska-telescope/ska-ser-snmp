@@ -9,8 +9,18 @@ from typing import Any, Generator
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
 from tango import AttrWriteType
+import yaml
 
 from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
+
+
+def load_device_definition(filename: str) -> Any:
+    """
+    Return the parsed contents of the YAML file at filename.
+    """
+    with open(filename, encoding="utf-8") as def_file:
+        # TODO here would be a good place for some schema validation
+        return yaml.safe_load(def_file)
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:

@@ -13,8 +13,8 @@ from tango import DeviceProxy, DevState, EventData, EventType
 from tango.test_context import DeviceTestContext
 
 from ska_proxr_device.proxr_device import ProXRDevice
-from ska_proxr_device.proxr_server import ProXRServer
-from ska_proxr_device.proxr_simulator import ProXRSimulator
+from .proxr_server import ProXRServer
+from .proxr_simulator import ProXRSimulator
 
 
 def expect_attribute(

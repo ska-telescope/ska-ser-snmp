@@ -4,7 +4,7 @@ from enum import IntEnum
 
 from ska_ser_devices.client_server import ApplicationServer
 
-from ska_proxr_device.proxr_server import ProXRServer
+from .proxr_server import ProXRServer
 
 
 class ProXRSimulator(ApplicationServer[bytes, bytes]):
@@ -49,7 +49,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         # Set up relay attributes
         for i in range(1, number_of_relays + 1):
-            relay = f"R{i}"
+            relay = f"Relay{i}"
             self._attributes[relay] = False
 
         super().__init__(
@@ -97,7 +97,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         """
 
         relay, command = self.decode_command(request)
-        relay_attribute_name = f"R{relay}"
+        relay_attribute_name = f"Relay{relay}"
 
         if command == ("READ"):
             status = self._attributes[relay_attribute_name]
