@@ -65,13 +65,11 @@ class ProXRClient:
         return bytes(header + bytes_request + [checksum])
 
     def bytes_request(
-        self, write_command: bool | None, relay_attribute: str, bank: int = 1
+        self, write_command: bool | None, relay: int, bank: int = 1
     ) -> bytes:
         """
         Return the payload for an input command.
         """
-        relay_number = int(relay_attribute.replace("R", ""))
-
         if write_command is not None:
             hex_value = (
                 self._CommandStartingHex.ON
@@ -81,7 +79,7 @@ class ProXRClient:
         else:
             hex_value = self._CommandStartingHex.READ
 
-        bytes_request = [0xFE, hex_value + relay_number, bank]
+        bytes_request = [0xFE, hex_value + relay, bank]
         return self.marshall(bytes_request)
 
     def send_request(

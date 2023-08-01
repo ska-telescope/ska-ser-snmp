@@ -77,7 +77,7 @@ def expect_attribute(
 
 @pytest.fixture(scope="session")
 def simulator():
-    if int(os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1")).strip():
+    if int(os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip()):
         sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
             user, group = sim_user.split(":")

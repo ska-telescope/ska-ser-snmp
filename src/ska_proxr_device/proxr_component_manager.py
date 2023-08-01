@@ -54,7 +54,7 @@ class ProXRComponentManager(AttributePollingComponentManager):
             for relay, command in poll_request.writes.items():
                 bytes_request = self._proxr_client.bytes_request(
                     write_command=command,
-                    relay_attribute=relay,
+                    relay=int(relay.replace("R", "")),
                 )
                 self.logger.debug(
                     f"The following write payload is being sent to the component: {list(bytes_request)}"
@@ -69,7 +69,7 @@ class ProXRComponentManager(AttributePollingComponentManager):
             for relay in poll_request.reads:
                 bytes_request = self._proxr_client.bytes_request(
                     write_command=None,
-                    relay_attribute=relay,
+                    relay=int(relay.replace("R", "")),
                 )
                 self.logger.debug(
                     f"The following read payload is being sent to the component: {list(bytes_request)}"
