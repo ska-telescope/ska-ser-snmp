@@ -1,8 +1,7 @@
 from tango.server import device_property
 
-from ska_low_itf_devices import load_device_definition
 from ska_low_itf_devices.attribute_polling_device import AttributePollingDevice
-from ska_snmp_device.definitions import parse_device_definition
+from ska_snmp_device.definitions import load_device_definition, parse_device_definition
 from ska_snmp_device.snmp_component_manager import SNMPComponentManager
 
 

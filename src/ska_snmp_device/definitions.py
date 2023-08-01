@@ -6,10 +6,10 @@ import itertools
 import string
 from typing import Any, Generator
 
+import yaml
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
 from tango import AttrWriteType
-import yaml
 
 from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
 
