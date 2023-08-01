@@ -20,12 +20,12 @@ class ProXRDevice(AttributePollingDevice):
             AttrInfo(
                 polling_period=self.UpdateRate,
                 attr_args={
-                    "name": f"R{i+1}",
+                    "name": f"Relay{i}",
                     "dtype": bool,
                     "access": tango.AttrWriteType.READ_WRITE,
                 },
             )
-            for i in range(self.NumberOfRelays)
+            for i in range(1, self.NumberOfRelays + 1)
         ]
         self._dynamic_attrs = {attr.name: attr for attr in dynamic_attrs}
 

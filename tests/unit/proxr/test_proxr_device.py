@@ -11,7 +11,7 @@ def test_switching(proxr_device, number_of_relays):
 
     # Sequentially switch all the relays on and off.
     for i in range(1, number_of_relays + 1):
-        setattr(proxr_device, f"R{i}", True)
-        expect_attribute(proxr_device, f"R{i}", True)
-        setattr(proxr_device, f"R{i}", False)
-        expect_attribute(proxr_device, f"R{i}", False)
+        setattr(proxr_device, f"Relay{i}", True)
+        expect_attribute(proxr_device, f"Relay{i}", True)
+        setattr(proxr_device, f"Relay{i}", False)
+        expect_attribute(proxr_device, f"Relay{i}", False)
