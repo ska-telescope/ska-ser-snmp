@@ -49,7 +49,7 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         # Set up relay attributes
         for i in range(1, number_of_relays + 1):
-            relay = "R" + str(i)
+            relay = f"R{i}"
             self._attributes[relay] = False
 
         super().__init__(
@@ -62,19 +62,18 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         """
         Unmarshall the incoming payload.
 
-        :param bytes_iterator: an iterator of bytestrings received by the
-            by the server
-        :return: the request packet in bytes
+        :param payload: the raw incoming bytes payload.
+        :return: the request packet in bytes.
         """
 
         starting_idx = payload.index(0xAA)
         length_of_packet = int(payload[starting_idx + 1])
 
-        request_idx = payload.index(0xFE)
+        response_idx = payload.index(0xFE)
         # Add three to include the header, length of packet and checksum bytes
-        request = payload[request_idx : request_idx + length_of_packet]
+        response = payload[response_idx : response_idx + length_of_packet]
 
-        return request
+        return response
 
     def marshall(self, response: bytes) -> bytes:
         """
@@ -94,12 +93,11 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
 
         :param request: the request packet in bytes.
         :raises ValueError: invalid command.
-        :return: the response byte to be sent back to the client.
+        :return: the response bytes to be sent back to the client.
         """
 
         relay, command = self.decode_command(request)
         relay_attribute_name = f"R{relay}"
-        print(f"REQUEST ON RELAY: {relay_attribute_name}, {command}")
 
         if command == ("READ"):
             status = self._attributes[relay_attribute_name]
@@ -122,7 +120,6 @@ class ProXRSimulator(ApplicationServer[bytes, bytes]):
         :param request_bytes: full request packet in bytes.
         :return: tuple containing the relay attribute and command to be executed.
         """
-        print(f"THE REQUEST BYTES: {list(request_bytes)}")
         cmd_idx = request_bytes.index(0xFE) + 1
         cmd_code = request_bytes[cmd_idx]
 

@@ -14,6 +14,8 @@ from ska_proxr_device.proxr_client import ProXRClient
 
 
 class ProXRComponentManager(AttributePollingComponentManager):
+    """Component manager for a ProXR relay board."""
+
     def __init__(  # noqa: D107
         self,
         host: str,
@@ -54,11 +56,11 @@ class ProXRComponentManager(AttributePollingComponentManager):
                     write_command=command,
                     relay_attribute=relay,
                 )
-                self.logger.info(
+                self.logger.debug(
                     f"The following write payload is being sent to the component: {list(bytes_request)}"
                 )
                 response = self._proxr_client.send_request(sock, request=bytes_request)
-                self.logger.info(
+                self.logger.debug(
                     f"The component sent the following response: {list(response)}"
                 )
 
@@ -69,11 +71,11 @@ class ProXRComponentManager(AttributePollingComponentManager):
                     write_command=None,
                     relay_attribute=relay,
                 )
-                self.logger.info(
+                self.logger.debug(
                     f"The following read payload is being sent to the component: {list(bytes_request)}"
                 )
                 response = self._proxr_client.send_request(sock, request=bytes_request)
-                self.logger.info(
+                self.logger.debug(
                     f"The component sent the following response: {list(response)}"
                 )
                 status_byte = response[-2]

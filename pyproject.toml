@@ -17,6 +17,7 @@ python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
 pytango = "^9.4.1"
 PyYAML = "^6.0"
 ska-tango-base = "^0.18.1"
+ska-ser-devices = "^0.1.1"
 pysnmp-lextudio = "^5.0.27"
 more-itertools = "^9.1.0"
 

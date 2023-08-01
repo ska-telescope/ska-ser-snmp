@@ -1499,6 +1499,22 @@ url = "https://artefact.skao.int/repository/pypi-internal/simple"
 reference = "skao"
 
 [[package]]
+name = "ska-ser-devices"
+version = "0.1.1"
+description = "A library package for communicating with hardware through standard interfaces (e.g. MODBUS, SCPI, SNMP)."
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "ska_ser_devices-0.1.1-py3-none-any.whl", hash = "sha256:a0a3b8e24281d9789da48a190c0527557fb8cfc162bc7a885922cdb2eccae2a9"},
+    {file = "ska_ser_devices-0.1.1.tar.gz", hash = "sha256:15814469e255679d1cfd0f500de8cd8a1037dbe42a57e1b18419c933a3d48799"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://artefact.skao.int/repository/pypi-internal/simple"
+reference = "skao"
+
+[[package]]
 name = "ska-ser-logging"
 version = "0.4.1+0a677a67"
 description = "Square Kilometre Array logging configuration library"
@@ -1938,4 +1954,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "4ae463d558ea9bca0dc5ae294252bae176bb59d7e9e159b5176d0674bb5fde4e"
+content-hash = "66063d8ff7c8766e0b8d30e787e8b6b667900a5d6a362594b0745c8191b78e7e"

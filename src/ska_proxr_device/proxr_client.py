@@ -5,6 +5,8 @@ from typing import Any, Generator
 
 
 class ProXRClient:
+    """Client for sending/receiving ProXR byte payloads to from a server."""
+
     class _CommandStartingHex(IntEnum):
         """
         Mapping to help obtain the hex value of commands.
@@ -54,8 +56,8 @@ class ProXRClient:
         """
         Marshall the payload by adding the header and checksum bytes.
 
-        :return: the marshalled payload to be sent to the component.
-
+        :param bytes_request: the request portion of the payload in bytes.
+        :return: the full payload with header and checksum types.
         """
         header = [0xAA, len(bytes_request)]
         checksum = sum(header + bytes_request) & 255
@@ -91,10 +93,10 @@ class ProXRClient:
         """
         Send the bytes to the component through a socket.
 
-        :param request: the request payload in bytes.
-        :param max_send_attempts: the maximum number of times the component manager
-            will attempt to connect to the component through the socket, defaults to 3.
-        :return: the response payload from the component in bytes.
+        :param sock: a socket for communicating with the component.
+        :param request: the request bytes payload.
+        :param buffer_size: defaults to 1024.
+        :return: response from the component.
         """
 
         sock.sendall(request)
