@@ -26,20 +26,22 @@ def component_manager(endpoint):
         logger=logging.getLogger(),
         communication_state_callback=comm_state_changed,
         component_state_callback=component_state_changed,
-        snmp_attributes=[
+        attributes=[
             SNMPAttrInfo(
-                "fast",
-                ("MIB", "tastic", 1),
-                attr_args={},
+                attr_args=dict(
+                    name="fast",
+                    dtype=int,
+                ),
                 polling_period=0.5,
-                dtype=int,
+                identity=("MIB", "tastic", 1),
             ),
             SNMPAttrInfo(
-                "slow",
-                ("MIB", "tastic", 2),
-                attr_args={},
+                attr_args=dict(
+                    name="slow",
+                    dtype=int,
+                ),
                 polling_period=1.0,
-                dtype=int,
+                identity=("MIB", "tastic", 2),
             ),
         ],
         poll_rate=2.0,
@@ -51,33 +53,26 @@ def test_component_manager_polling_periods(component_manager):
     mgr = component_manager
     assert all(t == float("-inf") for t in mgr._last_polled.values())
 
-    def oid_for_object(o: Any) -> Any:
-        identity, _ = o._ObjectType__args
-        return identity._ObjectIdentity__args
-
     def time_travel(d: float) -> None:
         mgr._last_polled.update((k, v - d) for k, v in mgr._last_polled.items())
 
-    fast_oid = ("MIB", "tastic", 1)
-    slow_oid = ("MIB", "tastic", 2)
-
-    to_poll = {oid_for_object(o) for o in component_manager.get_request()}
-    assert to_poll == {slow_oid, fast_oid}
+    attrs_to_poll = set(mgr.get_request().reads)
+    assert attrs_to_poll == {"slow", "fast"}
 
     now = time.time()
-    mgr._last_polled.update({slow_oid: now, fast_oid: now})
+    mgr._last_polled.update({"slow": now, "fast": now})
 
     time_travel(0.25)
-    assert not component_manager.get_request()
+    assert not mgr.get_request().reads
 
     time_travel(0.5)
-    to_poll = {oid_for_object(o) for o in component_manager.get_request()}
-    assert to_poll == {fast_oid}
+    to_poll = set(mgr.get_request().reads)
+    assert to_poll == {"fast"}
 
     time_travel(0.5)
-    to_poll = {oid_for_object(o) for o in component_manager.get_request()}
-    assert to_poll == {slow_oid, fast_oid}
+    to_poll = set(mgr.get_request().reads)
+    assert to_poll == {"slow", "fast"}
 
-    mgr._last_polled[fast_oid] = time.time()
-    to_poll = {oid_for_object(o) for o in component_manager.get_request()}
-    assert to_poll == {slow_oid}
+    mgr._last_polled["fast"] = time.time()
+    to_poll = set(mgr.get_request().reads)
+    assert to_poll == {"slow"}

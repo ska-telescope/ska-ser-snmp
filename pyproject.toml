@@ -9,6 +9,8 @@ description = "Python package for LOW ITF equipment tango devices"
 authors = ["Malte Marquarding <malte.marquarding@csiro.au>"]
 license = "BSD 3-clause new license"
 packages = [
+    { include = "ska_low_itf_devices", from = "src" },
+    { include = "ska_proxr_device", from = "src" },
     { include = "ska_snmp_device", from = "src" },
 ]
 
@@ -20,6 +22,7 @@ python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
 pytango = "^9.4.1"
 PyYAML = "^6.0"
 ska-tango-base = "^0.18.1"
+ska-ser-devices = "^0.1.1"
 pysnmp-lextudio = "^5.0.27"
 more-itertools = "^9.1.0"
 

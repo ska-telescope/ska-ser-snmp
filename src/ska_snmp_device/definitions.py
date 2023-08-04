@@ -64,13 +64,9 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     }
 
     return SNMPAttrInfo(
-        # named and dtype are duplicated here, but they're used a lot,
-        # so I grant them the rank of class member
-        name=attr_args["name"],
-        dtype=attr_args["dtype"],
-        identity=oid,
-        attr_args=attr_args,
         polling_period=polling_period,
+        attr_args=attr_args,
+        identity=oid,
     )
 
 

@@ -1,24 +1,25 @@
 import logging
-import time
-from itertools import groupby
-from typing import Any, Callable, Generator, Iterable
+from typing import Any, Callable, Generator, Iterable, Mapping, Sequence
 
-from more_itertools import chunked, iter_except
+from more_itertools import chunked
 from pysnmp.entity.engine import SnmpEngine
 from pysnmp.hlapi import ContextData, UdpTransportTarget, getCmd, setCmd
 from pysnmp.hlapi.auth import CommunityData, UsmUserData
 from pysnmp.proto.errind import ErrorIndication
-from pysnmp.proto.rfc1905 import unSpecified
 from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
-from ska_control_model import PowerState, TaskStatus
-from ska_tango_base.base import CommunicationStatusCallbackType, TaskCallbackType
-from ska_tango_base.poller import PollingComponentManager
+from ska_tango_base.base import CommunicationStatusCallbackType
 
+from ska_low_itf_devices.attribute_polling_component_manager import (
+    AttributePollingComponentManager,
+    AttrPollRequest,
+    AttrPollResponse,
+)
 from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
 
-class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[ObjectType]]):
-    # pylint: disable=too-many-instance-attributes
+class SNMPComponentManager(AttributePollingComponentManager):
+    _attributes: Mapping[str, SNMPAttrInfo]
+
     SNMPCmdFn = Callable[
         [
             SnmpEngine,
@@ -39,7 +40,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         logger: logging.Logger,
         communication_state_callback: CommunicationStatusCallbackType,
         component_state_callback: Callable[..., None],
-        snmp_attributes: list[SNMPAttrInfo],
+        attributes: Sequence[SNMPAttrInfo],
         poll_rate: float,
     ):
         # pylint: disable=too-many-arguments
@@ -48,19 +49,8 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
             communication_state_callback,
             component_state_callback,
             poll_rate=poll_rate,
-            **{attr_info.name: None for attr_info in snmp_attributes},
+            attributes=attributes,
         )
-
-        # Map from SNMP symbolic ID (MIB, symbol name, *indexes) to a metadata
-        # object describing the associated attribute
-        self._snmp_attrs: dict[tuple[str | int, ...], SNMPAttrInfo] = {
-            attr_info.identity: attr_info for attr_info in snmp_attributes
-        }
-
-        # The same map, but mapping by Tango attribute name
-        self._snmp_attrs_by_name: dict[str, SNMPAttrInfo] = {
-            attr_info.name: attr_info for attr_info in snmp_attributes
-        }
 
         # Used to create our SNMP connection
         self._host = host
@@ -78,86 +68,53 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         # Protocol Data Unit, i.e. a single packet
         self._max_objects_per_pdu = max_objects_per_pdu
 
-        # Writes accumulate here in between polls
-        self._pending_writes: dict[tuple[str | int, ...], Any] = {}
-
-        # store the last time each attribute was successfully polled,
-        # used to calculate when to poll again based on polling_period
-        self._last_polled = {attr.identity: float("-inf") for attr in snmp_attributes}
-
-    def get_request(self) -> list[ObjectType]:
-        """
-        Assemble a list of ObjectTypes representing pending writes and reads.
-
-        The writes appear first, and come from `self._pending_writes`. Reads
-        are requested for each attribute whose last successful poll happened
-        longer ago than its polling period, and each attribute being written.
-        """
-        # atomically drain the write queue
-        pending_writes = dict(iter_except(self._pending_writes.popitem, KeyError))
-        writes = [
-            ObjectType(ObjectIdentity(*identity), value)
-            for identity, value in pending_writes.items()
-        ]
-
-        now = time.time()
-        reads = [
-            ObjectType(ObjectIdentity(*identity))
-            for identity, attr in self._snmp_attrs.items()
-            if now - self._last_polled[identity] >= attr.polling_period
-            or identity in pending_writes  # bonus poll after writing
-        ]
-
-        return [*writes, *reads]
-
-    def poll(self, poll_request: list[ObjectType]) -> list[ObjectType]:
+    def poll(self, poll_request: AttrPollRequest) -> AttrPollResponse:
         """
         Group by writes and reads, chunk, and run the appropriate SNMP command.
 
         Aggregate any returned ObjectTypes from GET commands as the poll response.
         """
 
-        def _snmp_cmd_for_obj(obj: ObjectType) -> SNMPComponentManager.SNMPCmdFn:
-            val = obj._ObjectType__args[1]  # pylint: disable=protected-access
-            return getCmd if val is unSpecified else setCmd  # type: ignore
+        for write_chunk in chunked(
+            poll_request.writes.items(), self._max_objects_per_pdu
+        ):
+            objs = [
+                ObjectType(ObjectIdentity(*self._attributes[attr_name].identity), value)
+                for attr_name, value in write_chunk
+            ]
+            # The value returned from a SET will just be what we put in,
+            # but the internal state of the device as returned by a GET
+            # may not have changed yet. So instead of updating state after
+            # setting, just wait for a poll to reflect the new reality.
+            for _ in self._snmp_cmd(setCmd, objs):
+                pass
 
-        poll_response: list[ObjectType] = []
-        for cmd, group in groupby(poll_request, _snmp_cmd_for_obj):
-            for objs in chunked(group, self._max_objects_per_pdu):
-                poll_response.extend(self._snmp_cmd(cmd, objs))
-        return poll_response
+        state_updates: AttrPollResponse = {}
+        for read_chunk in chunked(poll_request.reads, self._max_objects_per_pdu):
+            oid_attr_map = {
+                attr.identity: attr
+                for attr_name in read_chunk
+                for attr in [self._attributes[attr_name]]
+            }
+            objs = [
+                ObjectType(ObjectIdentity(*self._attributes[attr_name].identity))
+                for attr_name in read_chunk
+            ]
+            for oid, val in self._snmp_cmd(getCmd, objs):
+                attr = oid_attr_map[self._mib_symbolic(oid)]
+                state_updates[attr.name] = snmp_to_python(attr, val)
 
-    def poll_succeeded(self, poll_response: list[ObjectType]) -> None:
+        return state_updates
+
+    def from_python(self, attr_name: str, val: Any) -> Any:
         """
-        Notify the device of the return values of a successful poll.
+        Convert from raw Python type to a hardware-compatible type.
 
-        This involves type coercion from PySNMP- to PyTango-compatible types.
+        This is called in enqueue_write() so that any conversion error happens
+        early, when an attribute is set, rather than in the polling thread.
         """
-        super().poll_succeeded(poll_response)
-        state_updates = {}
-        polled_oids = []
-        for oid, val in poll_response:
-            oid_symbolic = self._mib_symbolic(oid)
-            attr_info = self._snmp_attrs[oid_symbolic]
-            state_updates[attr_info.name] = snmp_to_python(attr=attr_info, value=val)
-            polled_oids.append(oid_symbolic)
-
-        now = time.time()
-        self._last_polled.update((k, now) for k in polled_oids)
-
-        self._update_component_state(power=PowerState.ON, **state_updates)
-
-    def enqueue_write(self, attr_name: str, val: Any) -> None:
-        """
-        Queue an attribute value to be written on the next poll.
-
-        If there is already a write pending for the attribute, it will be superseded.
-        """
-        # Tango DevEnums have to start at 0, but many SNMP enums start at 1.
-        # So we add an "invalid" 0 value to the enum, and check for it here.
-        attr = self._snmp_attrs_by_name[attr_name]
-        converted_value = python_to_snmp(attr, val)
-        self._pending_writes[attr.identity] = converted_value
+        attr = self._attributes[attr_name]
+        return python_to_snmp(attr, val)
 
     def _snmp_cmd(
         self, cmd_fn: SNMPCmdFn, objects: Iterable[ObjectType]
@@ -182,13 +139,7 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
             # TODO error handling could be more sophisticated
             if error_indication:
                 raise error_indication
-
-            # The value returned from a SET will just be what we put in,
-            # but the internal state of the device as returned by a GET
-            # may not have changed yet. So instead of updating state after
-            # setting, just wait for a poll to reflect the new reality.
-            if cmd_fn is not setCmd:
-                yield from result
+            yield from result
 
     @staticmethod
     def _mib_symbolic(oid: ObjectIdentity) -> tuple[str | int, ...]:
@@ -207,31 +158,3 @@ class SNMPComponentManager(PollingComponentManager[list[ObjectType], list[Object
         mib, name, indices = oid.getMibSymbol()
         indices = (y for x in indices for y in (x if isinstance(x, Iterable) else [x]))
         return mib, name, *indices
-
-    def off(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def standby(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def on(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )
-
-    def reset(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
-    ) -> tuple[TaskStatus, str]:
-        raise NotImplementedError(
-            "SNMPComponentManager doesn't implement on, off, standby or reset"
-        )

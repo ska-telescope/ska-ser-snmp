@@ -12,6 +12,15 @@ The documentation for this project, including how to get started with it, can be
 
 * [ska-low-itf-devices documentation](https://developer.skatelescope.org/projects/ska-low-itf-devices/en/latest/index.html "SKA Developer Portal: ska-low-itf-devices documentation")
 
+# ska_proxr_device.ProXRDevice
+
+This is a Tango device class for montinoring and control of ProXR relay boards. This allows for switching relays ON/OFF.
+
+The most important Tango properties supported by ProXRDevice are:
+* `NumberOfRelays`, the number of relay (banks) which exist on the relay board
+* `Host`, the IP or DNS name of the ProXR endpoint of the device under control
+* `Port`, the port of the SNMP endpoint, which defaults to 5025
+
 # ska_snmp_device.SNMPDevice
 
 This is a generic SNMP Tango device class for monitoring and control of any
