@@ -3,7 +3,10 @@ Functions to handle parsing and validating device definition files.
 """
 
 import itertools
+import os
 import string
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, Generator
 
 import yaml
@@ -14,13 +17,22 @@ from tango import AttrWriteType
 from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
 
 
+@contextmanager
+def _chdir(to_dir: os.PathLike[Any]) -> Generator[None, None, None]:
+    old_dir = os.getcwd()
+    os.chdir(to_dir)
+    yield
+    os.chdir(old_dir)
+
+
 def load_device_definition(filename: str) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
     """
-    with open(filename, encoding="utf-8") as def_file:
-        # TODO here would be a good place for some schema validation
-        return yaml.safe_load(def_file)
+    with _chdir(Path(__file__).parent / "device_library"):
+        with open(filename, encoding="utf-8") as def_file:
+            # TODO here would be a good place for some schema validation
+            return yaml.safe_load(def_file)
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
@@ -78,9 +90,13 @@ def _create_mib_builder() -> MibBuilder:
     # Adding a compiler allows the builder to fetch and compile novel MIBs.
     # mibs.pysnmp.com is built from https://github.com/lextudio/mibs.pysnmp.com
     # and contains thousands of standard MIBs and vendor MIBs for COTS hardware.
-    # Extra MIBs can be dropped in resources/mibs, which will be searched first.
+    # Extra MIBs can be dropped in ./mibs, which will be searched first.
     addMibCompiler(
-        mib_builder, sources=["resources/mibs", "https://mibs.pysnmp.com/asn1/@mib@"]
+        mib_builder,
+        sources=[
+            str(Path(__file__).parent / "mib_library"),
+            "https://mibs.pysnmp.com/asn1/@mib@",
+        ],
     )
 
     return mib_builder
