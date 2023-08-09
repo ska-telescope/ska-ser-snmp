@@ -1,0 +1,11 @@
+apiVersion: v2
+name: ska-low-itf-devices
+description: A Helm chart for SKA Tango devices
+type: application
+version: 0.1.0
+appVersion: 0.1.0
+icon: https://www.skatelescope.org/wp-content/uploads/2016/07/09545_NEW_LOGO_2014.png
+dependencies:
+- name: ska-tango-util
+  version: 0.4.6
+  repository: https://artefact.skao.int/repository/helm-internal
