@@ -1,20 +1,4 @@
-global:
-  cluster_domain: lowitf.internal.skao.int
-  tango_host: tango-databaseds:10000
-  dsconfig:
-    timeout: 300s
-    image:
-      registry: artefact.skao.int
-      image: ska-tango-images-tango-dsconfig
-      tag: 1.5.11
-      pullPolicy: IfNotPresent
-  minikube: false
-  telescope: LOW
-  facility: low-itf
-  labels:
-    app: ska-low-itf # for k8s-wait
-
-subsystem: test-equipment
+subsystem:
 
 resources:
   limits:
@@ -24,81 +8,32 @@ resources:
     cpu: 100m
     memory: 100Mi
 
-deviceServers:
-  servers:
-    ska-snmp-device:
-      image:
-        registry: registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices
-        image: ska-snmp-device
-        tag: 0.1.0-dev.c5e4c1c6a
-        pullPolicy: IfNotPresent
-      instances: ["pdu"]
-      entrypoints:
-        - name: ska_snmp_device.SNMPDevice
-      server:
-        instances:
-          - name: "pdu"
-            classes:
-              - name: "SNMPDevice"
-                devices:
-                  - name: "low-itf/pdu/1"
-                    properties:
-                      - name: DeviceDefinition
-                        values: ["EN6808.yaml"]
-                      - name: Host
-                        values: ["10.135.253.200"]
-                      - name: V2Community
-                        values: ["private"]
-                      - name: LoggingLevelDefault
-                        values: ["5"]
-                      - name: UpdateRate
-                        values: ["2.0"]
-    ska-proxr-device:
-      image:
-        registry: registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices
-        image: ska-proxr-device
-        tag: 0.1.0-dev.c5e4c1c6a
-        pullPolicy: IfNotPresent
-      instances: ["switchrelay"]
-      entrypoints:
-        - name: ska_proxr_device.ProXRDevice
-      server:
-        instances:
-          - name: "switchrelay"
-            classes:
-              - name: "ProXRDevice"
-                devices:
-                  - name: "low-itf/switchrelay/1"
-                    properties:
-                      - name: NumberOfRelays
-                        values: ["8"]
-                      - name: Host
-                        values: ["10.135.151.35"]
-                      - name: Port
-                        values: ["5025"]
-                      - name: LoggingLevelDefault
-                        values: ["5"]
-                      - name: UpdateRate
-                        values: ["2.0"]
+dsconfig:
+  timeout: 300s
+  image:
+    registry: artefact.skao.int
+    image: ska-tango-images-tango-dsconfig
+    tag: 1.5.11
+    pullPolicy: IfNotPresent
 
-deviceServers2:
-  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-snmp-device:0.1.0-dev.c5e4c1c6a:
-    pdu:
-      ska_snmp_device.SNMPDevice:
-        low-itf/pdu/1:
-          DeviceDefinition: EN6808.yaml
-          Host: 10.135.253.200
-          V2Community: private
-          UpdateRate: 2.0
-          LoggingLevelDefault: 4
-          Host->polling_period: 5000
-
-  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-proxr-device:0.1.0-dev.c5e4c1c6a:
-    switchrelay:
-      ska_proxr_device.ProXRDevice:
-        low-itf/switchrelay/1:
-          NumberOfRelays: 8
-          Host: 10.135.151.35
-          Port: 5025
-          UpdateRate: 2.0
-          LoggingLevelDefault: 4
+deviceServers: {}
+#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-snmp-device:0.1.0-dev.c5e4c1c6a:
+#    pdu:
+#      ska_snmp_device.SNMPDevice:
+#        low-itf/pdu/1:
+#          DeviceDefinition: EN6808.yaml
+#          Host: 10.135.253.200
+#          V2Community: private
+#          UpdateRate: 2.0
+#          LoggingLevelDefault: 4
+#          Host->polling_period: 5000
+#
+#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-proxr-device:0.1.0-dev.c5e4c1c6a:
+#    switchrelay:
+#      ska_proxr_device.ProXRDevice:
+#        low-itf/switchrelay/1:
+#          NumberOfRelays: 8
+#          Host: 10.135.151.35
+#          Port: 5025
+#          UpdateRate: 2.0
+#          LoggingLevelDefault: 4
