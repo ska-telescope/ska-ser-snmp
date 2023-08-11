@@ -1,0 +1,80 @@
+{{- $_ := .Values.subsystem | required ".Values.subsystem is required" -}}
+
+{{- $defaultK8s := dict
+      "affinity" dict
+      "annotations" dict
+      "labels" dict
+      "nodeSelector" dict
+      "resources" dict
+      "securityContext" dict
+      "tolerations" list
+      "volumeMounts" list
+      "volumes" list
+}}
+
+{{ $deviceServers := dict "servers" dict}}
+
+{{- range $imageStr, $deviceServer := .Values.deviceServers }}
+
+  {{- $imageParts := splitList ":" $imageStr }}
+  {{- $imageTag := last $imageParts }}
+  {{- $imageRegistry := first $imageParts | splitList "/" | initial | join "/" }}
+  {{- $imageName := first $imageParts | splitList "/" | last }}
+  {{- $image := dict
+        "registry" $imageRegistry
+        "tag" $imageTag
+        "image" $imageName
+        "pullPolicy" "IfNotPresent"
+  }}
+
+  {{- $dsK8s := get $deviceServer "__k8s__" | default dict  }}
+
+  {{ $entrypoints := list }}
+  {{ $instancesTU := list }}
+  {{- range $instanceName, $classes := omit $deviceServer "__k8s__"}}
+
+    {{- $instanceK8s := get $classes "__k8s__" | default dict }}
+
+    {{ $classesTU := list }}
+    {{- range $className, $devices := omit $classes "__k8s__"}}
+
+      {{ $entrypoints = append $entrypoints (dict "name" $className)}}
+
+      {{ $devicesTU := list }}
+      {{- range $deviceName, $properties := $devices }}
+        {{- $deviceTU := dict "name" $deviceName | merge (include "device-properties" $properties | fromYaml) }}
+        {{ $devicesTU = append $devicesTU $deviceTU}}
+
+      {{- end }}
+      {{ $classesTU = append $classesTU (dict "name" ($className | splitList "." | last) "devices" $devicesTU)}}
+
+    {{- end }}
+    {{ $instancesTU = append $instancesTU (dict "name" $instanceName "classes" $classesTU | merge $instanceK8s)}}
+
+  {{- end }}
+  {{- $deviceServerTU := dict
+        "image" $image
+        "noretry" true
+        "domain" $imageName
+        "function" $imageName
+        "instances" (omit $deviceServer "__k8s__" | keys)
+        "entrypoints" $entrypoints
+        "server" (dict "name" $imageName "instances" $instancesTU)
+        | merge $dsK8s
+  }}
+  {{- $_ := set $deviceServers.servers $imageName $deviceServerTU}}
+
+{{- end }}
+
+{{- range $dsName, $deviceserver := $deviceServers.servers }}
+
+{{- $context := dict "name" $dsName "deviceserver" $deviceserver "image" $deviceserver.image "local" $ }}
+{{- $volume_context := dict "volume" $deviceserver.volume "local" $ }}
+
+{{ template "ska-tango-util.multidevice-config.tpl" $context }}
+{{ template "ska-tango-util.multidevice-sacc-role.tpl" $context }}
+{{ template "ska-tango-util.multidevice-job.tpl" $context }}
+{{ template "ska-tango-util.deviceserver-pvc.tpl" $volume_context }}
+{{ template "ska-tango-util.multidevice-svc.tpl" $context }}
+
+{{- end }}

@@ -19,23 +19,23 @@ attributes:
   # more likely to change but only occasionally
   - name: outlet{}Name
     indexes:
-      - [ 1, 2 ]
+      - [ 1, 24 ]
     oid: [ ENLOGIC-PDU-MIB, pduOutletSwitchedName, 1 ]
     polling_period: 10000
 
   - name: outlet{}Command
     indexes:
-      - [1, 2]
+      - [1, 24]
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1]
     polling_period: 10000
 
   # update these at the poll rate
   - name: outlet{}State
     indexes:
-      - [1, 2]
+      - [1, 24]
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1]
 
   - name: outlet{}Current
     indexes:
-      - [1, 2]
+      - [1, 24]
     oid: [ENLOGIC-PDU-MIB, pduOutletMeteredSTATUSCurrent, 1]

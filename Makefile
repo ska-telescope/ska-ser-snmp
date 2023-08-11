@@ -29,10 +29,6 @@ include .make/helm.mk
 
 include .make/k8s.mk
 
-docs-pre-build:
-	poetry config virtualenvs.create false
-	poetry install --no-root --only docs
-
 python-post-lint:
 	mypy src/ tests/
 

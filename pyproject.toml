@@ -14,17 +14,14 @@ packages = [
     { include = "ska_snmp_device", from = "src" },
 ]
 
-[tool.poetry.scripts]
-# tbd
-
 [tool.poetry.dependencies]
 python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
-pytango = "^9.4.1"
+pytango = "^9.4.2"
 PyYAML = "^6.0"
 ska-tango-base = "^0.18.1"
 ska-ser-devices = "^0.1.1"
 pysnmp-lextudio = "^5.0.27"
-more-itertools = "^9.1.0"
+more-itertools = "^10.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -45,6 +42,9 @@ pycodestyle = "^2.9.1"
 ska-tango-testing = "^0.4.0"
 snmpsim-lextudio = "^1.0.1"
 types-pyyaml = "^6.0.12.10"
+
+[tool.poetry.group.docs]
+optional = true
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2"

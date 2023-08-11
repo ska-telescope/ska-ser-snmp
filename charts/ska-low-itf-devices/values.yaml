@@ -1,0 +1,39 @@
+subsystem:
+
+resources:
+  limits:
+    cpu: 1
+    memory: 200Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+dsconfig:
+  timeout: 300s
+  image:
+    registry: artefact.skao.int
+    image: ska-tango-images-tango-dsconfig
+    tag: 1.5.11
+    pullPolicy: IfNotPresent
+
+deviceServers: {}
+#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-snmp-device:0.1.0-dev.c5e4c1c6a:
+#    pdu:
+#      ska_snmp_device.SNMPDevice:
+#        low-itf/pdu/1:
+#          DeviceDefinition: EN6808.yaml
+#          Host: 10.135.253.200
+#          V2Community: private
+#          UpdateRate: 2.0
+#          LoggingLevelDefault: 4
+#          Host->polling_period: 5000
+#
+#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-proxr-device:0.1.0-dev.c5e4c1c6a:
+#    switchrelay:
+#      ska_proxr_device.ProXRDevice:
+#        low-itf/switchrelay/1:
+#          NumberOfRelays: 8
+#          Host: 10.135.151.35
+#          Port: 5025
+#          UpdateRate: 2.0
+#          LoggingLevelDefault: 4
