@@ -2,6 +2,8 @@
 
 ## unreleased
 
+## 0.2.0
+
 * LOW-529: Upgrade to PyTango 9.4.2
 * LOW-529: Add a universal ska-low-itf-devices chart
 * LOW-516: Add ProXR device and component manager

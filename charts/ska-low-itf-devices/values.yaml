@@ -17,7 +17,7 @@ dsconfig:
     pullPolicy: IfNotPresent
 
 deviceServers: {}
-#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-snmp-device:0.1.0-dev.c5e4c1c6a:
+#  artefact.skao.int/ska-snmp-device:0.2.0
 #    pdu:
 #      ska_snmp_device.SNMPDevice:
 #        low-itf/pdu/1:
@@ -28,7 +28,7 @@ deviceServers: {}
 #          LoggingLevelDefault: 4
 #          Host->polling_period: 5000
 #
-#  registry.gitlab.com/ska-telescope/aiv/ska-low-itf-devices/ska-proxr-device:0.1.0-dev.c5e4c1c6a:
+#  artefact.skao.int/ska-proxr-device:0.2.0
 #    switchrelay:
 #      ska_proxr_device.ProXRDevice:
 #        low-itf/switchrelay/1:
