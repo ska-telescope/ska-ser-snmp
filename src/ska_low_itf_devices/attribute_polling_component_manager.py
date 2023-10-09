@@ -176,3 +176,18 @@ class AttributePollingComponentManager(
             raise NotImplementedError(
                 "AttributePollingComponentManager doesn't implement on, off, standby or reset"
             )
+
+    def poll_failed(self, exception: Exception) -> None:
+        """
+        Set PowerState.UNKNOWN when polling fails.
+
+        This is a bug fix that should be upstreamed to ska-tango-base once we
+        are confident it works.
+
+        :param exception: the exception that was raised by a recent poll
+            attempt.
+        """
+        super().poll_failed(exception)
+
+        # Should this go before or after updating the communication state?
+        self._update_component_state(power=PowerState.UNKNOWN)
