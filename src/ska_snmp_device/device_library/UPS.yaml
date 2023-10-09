@@ -1,56 +1,56 @@
 attributes:
   - name: firmwareVersion
-    oid: [UPS-MIB, upsIdentUPSSoftwareVersion, 1]
+    oid: [UPS-MIB, upsIdentUPSSoftwareVersion, 0]
     polling_period: .inf
 
   - name: model
-    oid: [UPS-MIB, upsIdentModel, 1]
+    oid: [UPS-MIB, upsIdentModel, 0]
     polling_period: .inf
-  
+
   - name: systemDescription
     oid: [SNMPv2-MIB, sysDescr, 0]
     polling_period: .inf
 
   - name: batteryStatus
-    oid: [UPS-MIB, upsBatteryStatus, 1]
-    polling_period: .inf
+    oid: [UPS-MIB, upsBatteryStatus, 0]
+    polling_period: 10000
 
   - name: batteryVoltage
-    oid: [UPS-MIB, upsBatteryVoltage, 1]
-    polling_period: .inf
+    oid: [UPS-MIB, upsBatteryVoltage, 0]
+    polling_period: 10000
 
   - name: batteryCurrent
-    oid: [UPS-MIB, upsBatteryCurrent, 1]
-    polling_period: .inf
+    oid: [UPS-MIB, upsBatteryCurrent, 0]
+    polling_period: 10000
 
   - name: batteryTemperature
-    oid: [UPS-MIB, upsBatteryTemperature, 1]
-    polling_period: .inf
-  
-  # - name: inputFrequency
-  #   oid: [UPS-MIB, upsInputFrequency, 1]
-  #   polling_period: .inf
-  
-  # - name: inputVoltage
-  #   oid: [UPS-MIB, upsInputVoltage, 1]
-  #   polling_period: .inf
-  
-  # - name: inputCurrent
-  #   oid: [UPS-MIB, upsInputCurrent, 1]
-  #   polling_period: .inf
+    oid: [UPS-MIB, upsBatteryTemperature, 0]
+    polling_period: 10000
 
-  # - name: outputSource
-  #   oid: [UPS-MIB, upsOutputSource, 1]
-  #   polling_period: .inf
+  - name: inputFrequency
+    oid: [UPS-MIB, upsInputFrequency, 1]
+    polling_period: 10000
 
-  # - name: outputFrequency
-  #   oid: [UPS-MIB, upsOutputFrequency, 1]
-  #   polling_period: .inf
-  
-  # - name: outputVoltage
-  #   oid: [UPS-MIB, upsOutputVoltage, 1]
-  #   polling_period: .inf
-  
-  # - name: outputCurrent
-  #   oid: [UPS-MIB, upsOutputCurrent, 1]
-  #   polling_period: .inf
+  - name: inputVoltage
+    oid: [UPS-MIB, upsInputVoltage, 1]
+    polling_period: 10000
+
+  - name: inputCurrent
+    oid: [UPS-MIB, upsInputCurrent, 1]
+    polling_period: 10000
+
+  - name: outputSource
+    oid: [UPS-MIB, upsOutputSource, 1]
+    polling_period: 10000
+
+  - name: outputFrequency
+    oid: [UPS-MIB, upsOutputFrequency, 1]
+    polling_period: 10000
+
+  - name: outputVoltage
+    oid: [UPS-MIB, upsOutputVoltage, 1]
+    polling_period: 10000
+
+  - name: outputCurrent
+    oid: [UPS-MIB, upsOutputCurrent, 1]
+    polling_period: 10000
