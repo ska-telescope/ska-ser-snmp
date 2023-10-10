@@ -93,13 +93,7 @@ def test_constrained_int(snmp_device):
     assert attr_config.max_value == "3600"
 
 
-def test_polling_period(snmp_device, simulator):
-    if simulator:
-        # These attrs map to SNMP objects - uptime and SNMP packets -
-        # that on a real device are always changing. On the simulator,
-        # they are static at the moment, so the test doesn't work.
-        pytest.skip("Doesn't work against simulator")
-
+def test_polling_period(snmp_device):
     event_queue: SimpleQueue[EventData] = SimpleQueue()
 
     slow_id = snmp_device.subscribe_event(
