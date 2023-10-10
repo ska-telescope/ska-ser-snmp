@@ -16,6 +16,8 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
 
     UpdateRate = device_property(dtype=float, default_value=2.0)
 
+    component_manager: AttributePollingComponentManager
+
     def create_component_manager(self) -> AttributePollingComponentManager:
         """
         Create and return a component manager. Called during init_device().
@@ -50,13 +52,17 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
         )
 
     def _dynamic_get(self, attr: Attribute) -> None:
-        # pylint: disable=protected-access
-        val = self.component_manager._component_state[attr.get_name()]
+        val, tstamp = self.component_manager.get_attr_value_time(attr.get_name())
         if val is None:
             attr.set_quality(AttrQuality.ATTR_INVALID)
         else:
-            attr.set_quality(AttrQuality.ATTR_VALID)
-            attr.set_value(val)
+            if tstamp == float("-inf"):
+                self.logger.warning(
+                    "Attribute %s set without timestamp", attr.get_name()
+                )
+                attr.set_value(val)
+            else:
+                attr.set_value_date_quality(val, tstamp, AttrQuality.ATTR_VALID)
 
     def _dynamic_set(self, attr: WAttribute) -> None:
         value = attr.get_write_value()

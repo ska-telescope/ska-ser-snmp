@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 from dataclasses import dataclass
 from functools import cached_property
@@ -64,6 +65,9 @@ class AttributePollingComponentManager(
             **{attr.name: None for attr in attributes},
         )
 
+        # we need our lock to be re-entrant so override the base class's lock
+        self._component_state_lock = threading.RLock()
+
         # The same map, but mapping by Tango attribute name
         self._attributes: Mapping[str, AttrInfo] = {
             attr.name: attr for attr in attributes
@@ -114,9 +118,9 @@ class AttributePollingComponentManager(
         super().poll_succeeded(poll_response)
 
         now = time.time()
-        self._last_polled.update((k, now) for k in poll_response)
-
-        self._update_component_state(power=PowerState.ON, **poll_response)
+        with self._component_state_lock:
+            self._last_polled.update((k, now) for k in poll_response)
+            self._update_component_state(power=PowerState.ON, **poll_response)
 
     def enqueue_write(self, attr_name: str, val: Any) -> None:
         """
@@ -191,3 +195,12 @@ class AttributePollingComponentManager(
 
         # Should this go before or after updating the communication state?
         self._update_component_state(power=PowerState.UNKNOWN)
+
+    def get_attr_value_time(self, attr: str) -> (str, float):
+        """
+        Get an attribute's value and last polled timestamp by name.
+
+        :param attr: the name of the attribute
+        """
+        with self._component_state_lock:
+            return self._component_state[attr], self._last_polled[attr]
