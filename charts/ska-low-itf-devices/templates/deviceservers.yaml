@@ -1,4 +1,4 @@
-{{- $_ := .Values.subsystem | required ".Values.subsystem is required" -}}
+{{- $_ := .Values.subsystem | required ".Values.subsystem is required by ska-tango-util" -}}
 
 {{- $defaultK8s := dict
       "affinity" dict

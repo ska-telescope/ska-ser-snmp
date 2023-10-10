@@ -16,24 +16,45 @@ dsconfig:
     tag: 1.5.11
     pullPolicy: IfNotPresent
 
-deviceServers: {}
-#  artefact.skao.int/ska-snmp-device:0.2.0
-#    pdu:
-#      ska_snmp_device.SNMPDevice:
-#        low-itf/pdu/1:
-#          DeviceDefinition: EN6808.yaml
-#          Host: 10.135.253.200
-#          V2Community: private
-#          UpdateRate: 2.0
-#          LoggingLevelDefault: 4
-#          Host->polling_period: 5000
-#
-#  artefact.skao.int/ska-proxr-device:0.2.0
-#    switchrelay:
-#      ska_proxr_device.ProXRDevice:
-#        low-itf/switchrelay/1:
-#          NumberOfRelays: 8
-#          Host: 10.135.151.35
-#          Port: 5025
-#          UpdateRate: 2.0
-#          LoggingLevelDefault: 4
+# This is a bit janky. ska-tango-util errors out if you don't have a populated
+# labels value - should be fixed there.
+labels:
+  app: ska-tango-device
+
+deviceServers:
+  # artefact.skao.int/ska-snmp-device:0.2.0:
+  #   ups:
+  #     ska_snmp_device.SNMPDevice:
+  #       low-itf/ups/1:
+  #         DeviceDefinition: UPS.yaml
+  #         Host: 10.132.47.11
+  #         V2Community: public
+  #         UpdateRate: 1.0
+  #         LoggingLevelDefault: 4
+  #       low-itf/ups/2:
+  #         DeviceDefinition: UPS.yaml
+  #         Host: 10.132.47.12
+  #         V2Community: public
+  #         UpdateRate: 1.0
+  #         LoggingLevelDefault: 4
+  #  artefact.skao.int/ska-snmp-device:0.2.0
+  #    pdu:
+  #      ska_snmp_device.SNMPDevice:
+  #        low-itf/pdu/1:
+  #          DeviceDefinition: EN6808.yaml
+  #          Host: 10.135.253.200
+  #          V2Community: private
+  #          UpdateRate: 2.0
+  #          LoggingLevelDefault: 4
+  #          Host->polling_period: 5000
+  #
+  #  artefact.skao.int/ska-proxr-device:0.2.0
+  #    switchrelay:
+  #      ska_proxr_device.ProXRDevice:
+  #        low-itf/switchrelay/1:
+  #          NumberOfRelays: 8
+  #          Host: 10.135.151.35
+  #          Port: 5025
+  #          UpdateRate: 2.0
+  #          LoggingLevelDefault: 4
+
