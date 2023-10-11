@@ -73,9 +73,35 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
         self,
         fault: bool | None = None,
         power: PowerState | None = None,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super()._component_state_changed(fault=fault, power=power)
         for name, value in kwargs.items():
-            self.push_change_event(name, value)
-            self.push_archive_event(name, value)
+            val, tstamp = self.component_manager.get_attr_value_time(name)
+            assert (
+                val == value
+            ), "value passed to _component_state_changed and current component state do not agree"
+            self.push_change_event(name, value, tstamp, AttrQuality.ATTR_VALID)
+            self.push_archive_event(name, value, tstamp, AttrQuality.ATTR_VALID)
+
+    def push_change_event(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Push a device server change event.
+
+        Overridden from SKABaseDevice to support extra args, specifically date.
+
+        :param args: positional arguments to be passed to push_change_event
+        :param kwargs: keyword arguments to be passed to push_change_event
+        """
+        self._submit_tango_operation("push_change_event", *args, **kwargs)
+
+    def push_archive_event(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Push a device server archive event.
+
+        Overridden from SKABaseDevice to support extra args, specifically date.
+
+        :param args: positional arguments to be passed to push_archive_event
+        :param kwargs: keyword arguments to be passed to push_archive_event
+        """
+        self._submit_tango_operation("push_archive_event", *args, **kwargs)

@@ -16,6 +16,10 @@ class AttrPollRequest:
     writes: dict[str, Any]
     reads: list[str]
 
+    def __bool__(self) -> bool:
+        """Poll request considered False if both reads and writes are."""
+        return bool(self.writes) or bool(self.reads)
+
 
 AttrPollResponse = dict[str, Any]
 
@@ -48,6 +52,8 @@ class AttrInfo:
 class AttributePollingComponentManager(
     PollingComponentManager[AttrPollRequest, AttrPollResponse]
 ):
+    _component_state_lock: threading.RLock  # type: ignore[assignment]
+
     def __init__(  # noqa: D107
         self,
         logger: logging.Logger,
@@ -99,7 +105,9 @@ class AttributePollingComponentManager(
             or attr_name in writes  # bonus poll after writing
         ]
 
-        return AttrPollRequest(writes, reads)
+        poll_request = AttrPollRequest(writes, reads)
+        self.logger.debug("Generated poll request: %s", poll_request)
+        return poll_request
 
     def poll(self, poll_request: AttrPollRequest) -> AttrPollResponse:
         """
@@ -115,6 +123,8 @@ class AttributePollingComponentManager(
 
         This involves type coercion from PySNMP- to PyTango-compatible types.
         """
+        self.logger.debug("Received poll response: %s", poll_response)
+
         super().poll_succeeded(poll_response)
 
         now = time.time()
@@ -196,7 +206,7 @@ class AttributePollingComponentManager(
         # Should this go before or after updating the communication state?
         self._update_component_state(power=PowerState.UNKNOWN)
 
-    def get_attr_value_time(self, attr: str) -> (str, float):
+    def get_attr_value_time(self, attr: str) -> tuple[str, float]:
         """
         Get an attribute's value and last polled timestamp by name.
 

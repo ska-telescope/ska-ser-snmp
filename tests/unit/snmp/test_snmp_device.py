@@ -1,6 +1,7 @@
 import queue
 import random
 import string
+import time
 from enum import Enum
 from itertools import islice
 from queue import SimpleQueue
@@ -122,3 +123,22 @@ def test_polling_period(snmp_device):
 
     assert len(fast_events) >= 7
     assert len(slow_events) <= 3
+
+
+def test_attribute_timestamps(snmp_device):
+    event_queue: SimpleQueue[EventData] = SimpleQueue()
+    fast_id = snmp_device.subscribe_event(
+        "fastPoller",
+        EventType.CHANGE_EVENT,
+        event_queue.put,
+    )
+
+    for ev in islice(iter_except(event_queue.get, queue.Empty), 1, 5):
+        timestamps = {
+            snmp_device.read_attribute(attr).time.totime()
+            for attr in ["writeableInt", "writeableString", "nonSequentialEnum"]
+        }
+        ev_time = ev.attr_value.time.totime()
+        assert list(timestamps) == [ev_time]
+
+    snmp_device.unsubscribe_event(fast_id)
