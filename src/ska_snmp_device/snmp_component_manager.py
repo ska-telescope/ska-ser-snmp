@@ -128,7 +128,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
         iterator = cmd_fn(
             SnmpEngine(),
             self._access,
-            UdpTransportTarget((self._host, self._port)),
+            UdpTransportTarget((self._host, self._port), timeout=5.0),
             ContextData(),
             *objects,
         )
