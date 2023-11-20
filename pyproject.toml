@@ -15,7 +15,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
+python = "~3.10"
 pytango = "^9.4.2"
 PyYAML = "^6.0"
 ska-tango-base = "^0.19.1"
