@@ -15,13 +15,15 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "~3.10"
-pytango = "^9.4.2"
-PyYAML = "^6.0"
-ska-tango-base = "^0.19.1"
-ska-ser-devices = "^0.2.0"
-pysnmp-lextudio = "^5.0.29"
-more-itertools = "^10.1.0"
+python = "^3.10"
+pytango = "^9.5.0"
+PyYAML = "^6.0.1"
+ska-tango-base = "^0.20.1"
+pysnmp-lextudio = "^5.0.34"
+more-itertools = "^10.2.0"
+
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -40,8 +42,9 @@ pytest-timeout = "^2.1.0"
 toml = "^0.10.2"
 pycodestyle = "^2.9.1"
 ska-tango-testing = "^0.4.0"
-snmpsim-lextudio = "^1.0.4"
-types-pyyaml = "^6.0.12.10"
+ska-ser-devices = "^0.2.0"
+snmpsim-lextudio = "^1.0.6"
+types-pyyaml = "^6.0.12.12"
 
 [tool.poetry.group.docs]
 optional = true
@@ -55,6 +58,11 @@ sphinx-autodoc-typehints = "^1.19"
 [[tool.poetry.source]]
 name = 'skao'
 url = 'https://artefact.skao.int/repository/pypi-internal/simple'
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
 
 [tool.pytest.ini_options]
 addopts = "-v"

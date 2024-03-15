@@ -82,14 +82,3 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
                 val == value
             ), "value passed to _component_state_changed and current component state do not agree"
             self.push_change_event(name, value, tstamp, AttrQuality.ATTR_VALID)
-
-    def push_change_event(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Push a device server change event.
-
-        Overridden from SKABaseDevice to support extra args, specifically date.
-
-        :param args: positional arguments to be passed to push_change_event
-        :param kwargs: keyword arguments to be passed to push_change_event
-        """
-        self._submit_tango_operation("push_change_event", *args, **kwargs)
