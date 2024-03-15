@@ -68,8 +68,11 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     attr_args = {
         "access": {
             "readonly": AttrWriteType.READ,
+            "read-only": AttrWriteType.READ,
             "writeonly": AttrWriteType.WRITE,
+            "write-only": AttrWriteType.WRITE,
             "readwrite": AttrWriteType.READ_WRITE,
+            "read-write": AttrWriteType.READ_WRITE,
         }[mib_info.maxAccess],
         **attr_args_from_snmp_type(mib_info.syntax),
         **attr,  # allow user to override generated args
