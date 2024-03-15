@@ -29,10 +29,14 @@ include .make/helm.mk
 
 include .make/k8s.mk
 
+python-pre-lint:
+	poetry install --with dev
+
 python-post-lint:
 	mypy src/ tests/
 
 python-pre-test:
+	poetry install --with dev
 	echo "$(SKA_SNMP_DEVICE_SIMULATOR_USER)"
 
 ### PYTHON END
