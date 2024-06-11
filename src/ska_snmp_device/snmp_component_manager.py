@@ -102,9 +102,31 @@ class SNMPComponentManager(AttributePollingComponentManager):
             ]
             for oid, val in self._snmp_cmd(getCmd, objs):
                 attr = oid_attr_map[self._mib_symbolic(oid)]
-                state_updates[attr.name] = snmp_to_python(attr, val)
-
+                pyval = snmp_to_python(attr, val)
+                value = self.override_snmp_type(attr, pyval)
+                state_updates[attr.name] = value
         return state_updates
+
+    def override_snmp_type(self, attr: SNMPAttrInfo, pyval: Any) -> str | int | float:
+        """
+        Override snmp data type if attr.dtype specified in config.
+
+        If the smnp data value is located in a module table the snmp
+        data type is usually a string. This may be problematic if you
+        require setting the attribute value for e.g min/max value/alarm
+        Override can be achieved by specifying the dtype in the configuration
+        file. Basic implementation here but more types can be added
+        """
+        value = pyval
+        if attr.dtype == "float" or attr.dtype == "double":
+            value = float(pyval)
+        if attr.dtype == "int":
+            value = int(pyval)
+        if attr.dtype == "boolean":
+            value = bool(int(pyval))
+        if attr.dtype == "enum":
+            value = int(pyval)
+        return value
 
     def from_python(self, attr_name: str, val: Any) -> Any:
         """
