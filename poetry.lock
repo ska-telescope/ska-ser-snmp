@@ -38,6 +38,21 @@ url = "https://pypi.org/simple"
 reference = "PyPI-public"
 
 [[package]]
+name = "atomicwrites"
+version = "1.4.1"
+description = "Atomic file writes."
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "atomicwrites-1.4.1.tar.gz", hash = "sha256:81b2c9071a49367a7f770170e5eec8cb66567cfbbc8c73d20ce5ca4a8d71cf11"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.org/simple"
+reference = "PyPI-public"
+
+[[package]]
 name = "attrs"
 version = "23.2.0"
 description = "Classes Without Boilerplate"
@@ -552,25 +567,6 @@ files = [
     {file = "docutils-0.18.1-py2.py3-none-any.whl", hash = "sha256:23010f129180089fbcd3bc08cfefccb3b890b0050e1ca00c867036e9d161b98c"},
     {file = "docutils-0.18.1.tar.gz", hash = "sha256:679987caf361a7539d76e584cbeddc311e3aee937877c87346f31debc63e9d06"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://pypi.org/simple"
-reference = "PyPI-public"
-
-[[package]]
-name = "exceptiongroup"
-version = "1.2.1"
-description = "Backport of PEP 654 (exception groups)"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "exceptiongroup-1.2.1-py3-none-any.whl", hash = "sha256:5258b9ed329c5bbdd31a309f53cbfb0b155341807f6ff7606a1e801a891b29ad"},
-    {file = "exceptiongroup-1.2.1.tar.gz", hash = "sha256:a4785e48b045528f5bfe627b6ad554ff32def154f42372786903b7abcfe1aa16"},
-]
-
-[package.extras]
-test = ["pytest (>=6)"]
 
 [package.source]
 type = "legacy"
@@ -1427,25 +1423,27 @@ reference = "PyPI-public"
 
 [[package]]
 name = "pytest"
-version = "7.4.4"
+version = "6.2.5"
 description = "pytest: simple powerful testing with Python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6"
 files = [
-    {file = "pytest-7.4.4-py3-none-any.whl", hash = "sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8"},
-    {file = "pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280"},
+    {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
+    {file = "pytest-6.2.5.tar.gz", hash = "sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89"},
 ]
 
 [package.dependencies]
+atomicwrites = {version = ">=1.0", markers = "sys_platform == \"win32\""}
+attrs = ">=19.2.0"
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
-exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
 iniconfig = "*"
 packaging = "*"
 pluggy = ">=0.12,<2.0"
-tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
+py = ">=1.8.2"
+toml = "*"
 
 [package.extras]
-testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [package.source]
 type = "legacy"
@@ -1517,20 +1515,17 @@ reference = "PyPI-public"
 
 [[package]]
 name = "pytest-metadata"
-version = "3.1.1"
+version = "2.0.4"
 description = "pytest plugin for test session metadata"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7,<4.0"
 files = [
-    {file = "pytest_metadata-3.1.1-py3-none-any.whl", hash = "sha256:c8e0844db684ee1c798cfa38908d20d67d0463ecb6137c72e91f418558dd5f4b"},
-    {file = "pytest_metadata-3.1.1.tar.gz", hash = "sha256:d2a29b0355fbc03f168aa96d41ff88b1a3b44a3b02acbe491801c98a048017c8"},
+    {file = "pytest_metadata-2.0.4-py3-none-any.whl", hash = "sha256:acb739f89fabb3d798c099e9e0c035003062367a441910aaaf2281bc1972ee14"},
+    {file = "pytest_metadata-2.0.4.tar.gz", hash = "sha256:fcc653f65fe3035b478820b5284fbf0f52803622ee3f60a2faed7a7d3ba1f41e"},
 ]
 
 [package.dependencies]
-pytest = ">=7.0.0"
-
-[package.extras]
-test = ["black (>=22.1.0)", "flake8 (>=4.0.1)", "pre-commit (>=2.17.0)", "tox (>=3.24.5)"]
+pytest = ">=3.0.0,<8.0.0"
 
 [package.source]
 type = "legacy"
@@ -1539,17 +1534,17 @@ reference = "PyPI-public"
 
 [[package]]
 name = "pytest-timeout"
-version = "2.3.1"
+version = "2.2.0"
 description = "pytest plugin to abort hanging tests"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pytest-timeout-2.3.1.tar.gz", hash = "sha256:12397729125c6ecbdaca01035b9e5239d4db97352320af155b3f5de1ba5165d9"},
-    {file = "pytest_timeout-2.3.1-py3-none-any.whl", hash = "sha256:68188cb703edfc6a18fad98dc25a3c61e9f24d644b0b70f33af545219fc7813e"},
+    {file = "pytest-timeout-2.2.0.tar.gz", hash = "sha256:3b0b95dabf3cb50bac9ef5ca912fa0cfc286526af17afc806824df20c2f72c90"},
+    {file = "pytest_timeout-2.2.0-py3-none-any.whl", hash = "sha256:bde531e096466f49398a59f2dde76fa78429a09a12411466f88a07213e220de2"},
 ]
 
 [package.dependencies]
-pytest = ">=7.0.0"
+pytest = ">=5.0.0"
 
 [package.source]
 type = "legacy"
@@ -2251,4 +2246,4 @@ reference = "PyPI-public"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "3ab0b1954dd4753c04090aa721e40973a7f636baa0b2586f1812ccfb87287983"
+content-hash = "9f287ca93e018b14bb309cb0434f04f8b98fdeaf9cfadc96b74a8f3f1d311160"
