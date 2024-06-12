@@ -55,6 +55,11 @@ sphinx-autodoc-typehints = "^1.19"
 [[tool.poetry.source]]
 name = 'skao'
 url = 'https://artefact.skao.int/repository/pypi-internal/simple'
+priority = "primary" 
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary" 
 
 [tool.pytest.ini_options]
 addopts = "-v"
