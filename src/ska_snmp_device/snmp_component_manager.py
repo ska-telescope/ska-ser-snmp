@@ -107,7 +107,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
                 state_updates[attr.name] = value
         return state_updates
 
-    def override_snmp_type(self, attr: SNMPAttrInfo, pyval: Any) -> str | int | float:
+    def override_snmp_type(self, attr: SNMPAttrInfo, pyval: Any) -> Any:
         """
         Override snmp data type if attr.dtype specified in config.
 
