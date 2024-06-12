@@ -28,7 +28,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
             ContextData,
             ObjectType,
         ],
-        Iterable[tuple[ErrorIndication, str, int, Iterable[ObjectType]]], 
+        Iterable[tuple[ErrorIndication, str, int, Iterable[ObjectType]]],
     ]
 
     def __init__(  # noqa: D107
