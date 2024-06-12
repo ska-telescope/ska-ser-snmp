@@ -53,13 +53,12 @@ sphinx-rtd-theme = "^1.0"
 sphinx-autodoc-typehints = "^1.19"
 
 [[tool.poetry.source]]
-name = 'skao'
+name = 'ska-nexus'
 url = 'https://artefact.skao.int/repository/pypi-internal/simple'
-priority = "primary" 
 
 [[tool.poetry.source]]
-name = "PyPI"
-priority = "primary" 
+name = "PyPI-public"
+url = 'https://pypi.org/simple'
 
 [tool.pytest.ini_options]
 addopts = "-v"
