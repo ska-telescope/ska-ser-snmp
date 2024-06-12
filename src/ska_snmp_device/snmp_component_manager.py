@@ -113,19 +113,18 @@ class SNMPComponentManager(AttributePollingComponentManager):
 
         If the smnp data value is located in a module table the snmp
         data type is usually a string. This may be problematic if you
-        require setting the attribute value for e.g min/max value/alarm
-        Override can be achieved by specifying the dtype in the configuration
-        file. Basic implementation here but more types can be added
+        require to set the attribute value with for e.g min/max value/alarm
+        Override can be achieved by adding the dtype in the configuration
+        file, but this alone does not return the correct type so we have to
+        coerce it. Basic implementation here but more types can be added
         """
         value = pyval
-        if attr.dtype == "float" or attr.dtype == "double":
+        if attr.dtype in ["float", "double"]:
             value = float(pyval)
-        if attr.dtype == "int":
+        if attr.dtype in ["int", "enum"]:
             value = int(pyval)
-        if attr.dtype == "boolean":
+        if attr.dtype in ["boolean"]:
             value = bool(int(pyval))
-        if attr.dtype == "enum":
-            value = int(pyval)
         return value
 
     def from_python(self, attr_name: str, val: Any) -> Any:
