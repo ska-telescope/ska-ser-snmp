@@ -44,7 +44,7 @@ ska-tango-testing = "^0.4.0"
 ska-ser-devices = "^0.2.0"
 snmpsim-lextudio = "^1.0.6"
 types-pyyaml = "^6.0.12.12"
-
+rpds-py = "^0.13.1"
 
 
 [tool.poetry.group.docs]
