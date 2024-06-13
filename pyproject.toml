@@ -26,6 +26,7 @@ more-itertools = "^10.2.0"
 optional = true 
 
 [tool.poetry.group.dev.dependencies]
+attrs = "^23.2.0"
 black = "^23.3.0"
 isort = "^5.10.1"
 flake8 = "^6.0.0"
@@ -41,6 +42,7 @@ pytest-json-report = "^1.5.0"
 pytest-timeout = "^2.1.0"
 toml = "^0.10.2"
 pycodestyle = "^2.9.1"
+referencing = "^0.35.1"
 ska-tango-testing = "^0.4.0"
 ska-ser-devices = "^0.2.0"
 snmpsim-lextudio = "^1.0.6"
