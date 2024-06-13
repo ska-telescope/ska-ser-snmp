@@ -22,9 +22,6 @@ ska-tango-base = "^0.20.1"
 pysnmp-lextudio = "^5.0.34"
 more-itertools = "^10.2.0"
 
-[tool.poetry.group.dev]
-optional = true 
-
 [tool.poetry.group.dev.dependencies]
 attrs = "^23.2.0"
 black = "^23.3.0"
