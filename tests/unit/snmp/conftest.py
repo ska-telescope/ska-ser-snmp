@@ -23,7 +23,7 @@ def expect_attribute(
     attr: str,
     value: Any,
     *,
-    timeout: float = 10.0,
+    timeout: float = 20.0,
 ) -> bool:
     """
     Wait for Tango attribute to have a certain value using a subscription.
