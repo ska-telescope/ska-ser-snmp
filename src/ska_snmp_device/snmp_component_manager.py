@@ -119,12 +119,13 @@ class SNMPComponentManager(AttributePollingComponentManager):
         coerce it. Basic implementation here but more types can be added
         """
         value = pyval
-        if attr.dtype in ("float", "double"):
-            value = float(pyval)
-        if attr.dtype in ("int", "enum"):
-            value = int(pyval)
-        if attr.dtype in ("boolean"):
-            value = bool(int(pyval))
+        if isinstance(attr.dtype, str):
+            if attr.dtype in ("float", "double"):
+                value = float(pyval)
+            if attr.dtype in ("int", "enum"):
+                value = int(pyval)
+            if attr.dtype in ("boolean"):
+                value = bool(int(pyval))
         return value
 
     def from_python(self, attr_name: str, val: Any) -> Any:
