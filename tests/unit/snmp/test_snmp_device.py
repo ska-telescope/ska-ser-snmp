@@ -86,11 +86,11 @@ def test_enum_nonsequential(snmp_device):
 
 
 def test_constrained_int(snmp_device):
-    with pytest.raises(DevFailed, match="above the maximum"):
-        snmp_device.writeableConstrainedInt = 3601
     attr_config = snmp_device.get_attribute_config("writeableConstrainedInt")
     assert attr_config.min_value == "0"
     assert attr_config.max_value == "3600"
+    with pytest.raises(DevFailed, match="above the maximum"):
+        snmp_device.writeableConstrainedInt = 3601
 
 
 def test_polling_period(snmp_device, simulator):
