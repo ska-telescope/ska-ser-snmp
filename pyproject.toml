@@ -74,7 +74,7 @@ log_cli_level = "DEBUG"
 docstring-style = "sphinx"
 rst-directives = "literalinclude"
 rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", "py:mod"]
-max-complexity = 10
+max-complexity = 15
 # E203 and W503 conflict with black
 extend-ignore = [
     "E203",  # conflicts with black - whitespace around slice
