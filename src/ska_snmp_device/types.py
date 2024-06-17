@@ -12,7 +12,7 @@ from math import ceil
 from typing import Any
 
 from pyasn1.type.base import Asn1Type
-from pyasn1.type.constraint import ValueRangeConstraint
+from pyasn1.type.constraint import ValueRangeConstraint, ConstraintsUnion
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
@@ -110,20 +110,26 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
             # Different flavours of integer then add a ValueRangeConstraint, and SNMP
             # objects can then apply their own range constraints. If we calculate the
             # intersection of these ranges, we can pass min and max values to Tango.
-            if all(isinstance(x, ValueRangeConstraint) for x in snmp_type.subtypeSpec):
-                ranges = ((r.start, r.stop) for r in snmp_type.subtypeSpec)
-                start, stop = reduce(_range_intersection, ranges)
-                attr_args.update(
-                    min_value=start,
-                    max_value=stop,
-                )
-                # Stop-gap to support Counter64. Perhaps we should always
-                # specify the smallest compatible Tango int type?
-                if stop >= 2**63:
-                    attr_args["dtype"] = DevULong64
-                    if stop == 2**64 - 1:
-                        del attr_args["max_value"]
-
+            range_constraints = []
+            for x in snmp_type.subtypeSpec:
+                if isinstance(x, ValueRangeConstraint):
+                    range_constraints.append(x)
+                if isinstance(x, ConstraintsUnion):
+                    for y in x:
+                        if isinstance(y, ValueRangeConstraint):
+                            range_constraints.append(y)
+            ranges = ((r.start, r.stop) for r in range_constraints)
+            start, stop = reduce(_range_intersection, ranges)
+            attr_args.update(
+                min_value=start,
+                max_value=stop,
+            )
+            # Stop-gap to support Counter64. Perhaps we should always
+            # specify the smallest compatible Tango int type?
+            if stop >= 2**63:
+                attr_args["dtype"] = DevULong64
+                if stop == 2**64 - 1:
+                    del attr_args["max_value"]
     return attr_args
 
 
