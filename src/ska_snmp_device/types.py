@@ -71,6 +71,7 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
     return value
 
 
+# pylint: disable=too-many-nested-blocks, too-many-branches
 def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
     """
     Given an SNMP type, return kwargs to be passed to tango.server.attribute().
@@ -111,13 +112,13 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
             # objects can then apply their own range constraints. If we calculate the
             # intersection of these ranges, we can pass min and max values to Tango.
             range_constraints = []
-            for x in snmp_type.subtypeSpec:
-                if isinstance(x, ValueRangeConstraint):
-                    range_constraints.append(x)
-                if isinstance(x, ConstraintsUnion):
-                    for y in x:
-                        if isinstance(y, ValueRangeConstraint):
-                            range_constraints.append(y)
+            for constraint in snmp_type.subtypeSpec:
+                if isinstance(constraint, ValueRangeConstraint):
+                    range_constraints.append(constraint)
+                if isinstance(constraint, ConstraintsUnion):
+                    for sub_constraint in constraint:
+                        if isinstance(sub_constraint, ValueRangeConstraint):
+                            range_constraints.append(sub_constraint)
             ranges = ((r.start, r.stop) for r in range_constraints)
             start, stop = reduce(_range_intersection, ranges)
             attr_args.update(
