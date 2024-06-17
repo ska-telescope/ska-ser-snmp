@@ -12,7 +12,7 @@ from math import ceil
 from typing import Any
 
 from pyasn1.type.base import Asn1Type
-from pyasn1.type.constraint import ValueRangeConstraint, ConstraintsUnion
+from pyasn1.type.constraint import ConstraintsUnion, ValueRangeConstraint
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
