@@ -13,6 +13,13 @@ packages = [
     { include = "ska_snmp_device", from = "src" },
 ]
 
+[[tool.poetry.source]]
+name = 'ska-nexus'
+url = 'https://artefact.skao.int/repository/pypi-internal/simple'
+[[tool.poetry.source]]
+name = "PyPI-public"
+url = 'https://pypi.org/simple'
+
 [tool.poetry.dependencies]
 python = "~3.10"  
 pytango = "^9.4.2"
@@ -49,10 +56,6 @@ Sphinx = "^5.2"
 PyYAML = "^6.0"
 sphinx-rtd-theme = "^1.0"
 sphinx-autodoc-typehints = "^1.19"
-
-[[tool.poetry.source]]
-name = 'skao'
-url = 'https://artefact.skao.int/repository/pypi-internal/simple'
 
 [tool.pytest.ini_options]
 addopts = "-v"
