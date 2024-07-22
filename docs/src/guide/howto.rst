@@ -6,9 +6,10 @@ This is a generic SNMP Tango device class for monitoring and control of any
 device that supports SNMP. It's configured using a YAML definition file, which
 maps SNMP objects to Tango attributes, which are dynamically created when the
 device is initialised. Here's a basic example defining a single attribute::
-  attributes:
-    - name: deviceDescription
-      oid: [ SNMPv2-MIB, sysDescr, 0 ]
+
+    attributes:
+      - name: deviceDescription
+        oid: [ SNMPv2-MIB, sysDescr, 0 ]
 
 Attributes are defined with reference to SNMP MIBs - files that describe which
 SNMP objects are available on a particular device. The `oid` field is made up
@@ -34,8 +35,8 @@ Getting started with local development
 4. Put your MIB in `mib_library`.  
    This step can be skipped if the MIB is hosted on mibs.pysnmp.com, in which case
    PySMI's MIB compiler should automatically download it.
-4. Determine the host, port and SNMP community of your SNMP device.
-5. Create your Tango device however you create Tango devices.  
+5. Determine the host, port and SNMP community of your SNMP device.
+6. Create your Tango device however you create Tango devices.  
    Set the attributes Host, Port, Community and DeviceDefinition appropriately
 
 The device definition file syntax
