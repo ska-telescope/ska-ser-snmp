@@ -1,3 +1,10 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 import pytest
 import yaml
 
@@ -8,14 +15,14 @@ from ska_snmp_device.definitions import (
 )
 
 
-def test_parse_definition_regression(definition_path):
+def test_parse_definition_regression(definition_path: str) -> None:
     definition = load_device_definition(definition_path)
     attributes = parse_device_definition(definition)
     # TODO compare this properly to a baseline
     assert len(attributes) == 9
 
 
-def test_expand_attribute_singular():
+def test_expand_attribute_singular() -> None:
     template = yaml.safe_load(
         """
     name: singular_attr_the_second
@@ -25,7 +32,7 @@ def test_expand_attribute_singular():
     assert [template] == list(_expand_attribute(template))
 
 
-def test_expand_attribute_indexed():
+def test_expand_attribute_indexed() -> None:
     template = yaml.safe_load(
         """
     name: plural_attr_{}
@@ -49,7 +56,7 @@ def test_expand_attribute_indexed():
     assert expected == list(_expand_attribute(template))
 
 
-def test_expand_attribute_nested():
+def test_expand_attribute_nested() -> None:
     template = yaml.safe_load(
         """
     name: flipped_{1}_nested_{0}
@@ -76,7 +83,7 @@ def test_expand_attribute_nested():
     assert expected == list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_suffix():
+def test_expand_attribute_missing_suffix() -> None:
     template = yaml.safe_load(
         """
     name: some_attribeaut
@@ -88,7 +95,7 @@ def test_expand_attribute_missing_suffix():
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_index():
+def test_expand_attribute_missing_index() -> None:
     template = yaml.safe_load(
         """
     name: attriboot_{}
@@ -100,7 +107,7 @@ def test_expand_attribute_missing_index():
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_missing_format():
+def test_expand_attribute_missing_format() -> None:
     template = yaml.safe_load(
         """
     name: attribrackets
@@ -114,7 +121,7 @@ def test_expand_attribute_missing_format():
         list(_expand_attribute(template))
 
 
-def test_expand_attribute_invalid_identifier():
+def test_expand_attribute_invalid_identifier() -> None:
     template = yaml.safe_load(
         """
     name: attriboat!

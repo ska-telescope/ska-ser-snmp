@@ -1,0 +1,22 @@
+[MESSAGES CONTROL]
+disable=
+    duplicate-code,
+    fixme,
+    invalid-name,  # conflicts with Tango naming conventions
+
+enable=
+    useless-suppression,
+
+[SIMILARITIES]
+min-similarity-lines=7
+ignore-imports=yes
+
+# pylint reports E1101 (no-member) for socket.SocketKind
+ignored-classes = socket
+
+# TODO: remove these when possible
+# W0212 protected-access
+# W0613 unused-argument
+# W0612 unused variable
+# W1203 logging-fstring-interpolation
+disable = W0212, W0613, W0612, W1203

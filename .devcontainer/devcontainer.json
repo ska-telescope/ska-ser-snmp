@@ -1,5 +1,5 @@
 {
-    "name": "ska-low-itf-devices devcontainer",
+    "name": "ska-ser-snmp devcontainer",
     "build": {
         "dockerfile": "Dockerfile",
         "context": ".."
@@ -18,7 +18,7 @@
                 "python.linting.pylintEnabled": true,
                 "python.linting.pylintPath": "/usr/local/bin/pylint",
                 "coverage-gutters.manualCoverageFilePaths": [
-                    "/workspaces/ska-low-itf-devices/build/reports/code-coverage.xml"
+                    "/workspaces/ska-ser-snmp/build/reports/code-coverage.xml"
                 ],
                 "coverage-gutters.showLineCoverage": true
             },

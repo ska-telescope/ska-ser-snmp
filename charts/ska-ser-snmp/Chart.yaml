@@ -1,6 +1,6 @@
 apiVersion: v2
-name: ska-low-itf-devices
-description: A Helm chart for SKA Tango devices
+name: ska-ser-snmp
+description: A Helm chart for SKA SNMP devices
 type: application
 version: 0.2.0
 appVersion: 0.2.0

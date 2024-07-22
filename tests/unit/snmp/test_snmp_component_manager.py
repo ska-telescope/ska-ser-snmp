@@ -1,3 +1,10 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 import logging
 import time
 from typing import Any
@@ -10,7 +17,7 @@ from ska_snmp_device.types import SNMPAttrInfo
 
 
 @pytest.fixture
-def component_manager(endpoint):
+def component_manager(endpoint: tuple[str, int]) -> SNMPComponentManager:
     def comm_state_changed(comm_state: CommunicationStatus) -> None:
         pass
 
@@ -49,7 +56,7 @@ def component_manager(endpoint):
     )
 
 
-def test_component_manager_polling_periods(component_manager):
+def test_component_manager_polling_periods(component_manager: SNMPComponentManager) -> None:
     mgr = component_manager
     assert all(t == float("-inf") for t in mgr._last_polled.values())
 

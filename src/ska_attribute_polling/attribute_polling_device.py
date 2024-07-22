@@ -1,3 +1,13 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
+"""This module implements a generic pollingdevice."""
+from __future__ import annotations
+
 from typing import Any
 
 from ska_control_model import CommunicationStatus, PowerState
@@ -12,22 +22,26 @@ from .attribute_polling_component_manager import (
 
 
 class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
+    """An implementation of a generic polling device."""
+
     _dynamic_attrs: dict[str, AttrInfo] = {}
 
     UpdateRate = device_property(dtype=float, default_value=2.0)
 
-    def create_component_manager(self) -> AttributePollingComponentManager:
+    def create_component_manager(
+        self: AttributePollingDevice,
+    ) -> AttributePollingComponentManager:
         """
         Create and return a component manager. Called during init_device().
 
         You should set _dynamic_attrs in here - they'll be initialised later
         in initialise_dynamic_attributes().
 
-        FIXME: that's pretty janky
+        :raises NotImplementedError: for sub classes
         """
         raise NotImplementedError()
 
-    def initialize_dynamic_attributes(self) -> None:
+    def initialize_dynamic_attributes(self: AttributePollingDevice) -> None:
         """Do what the name says. Called by Tango during init_device()."""
         for name, attr_info in self._dynamic_attrs.items():
             attr = attribute(
@@ -42,15 +56,16 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
             self.set_change_event(name, True)
             self.set_archive_event(name, True)
 
-    def _dynamic_is_allowed(self, attr_req_type: AttReqType) -> bool:
-        # pylint: disable=unused-argument
+    # pylint: disable=unused-argument
+    def _dynamic_is_allowed(
+        self: AttributePollingDevice, attr_req_type: AttReqType
+    ) -> bool:
         return (
             self.component_manager.communication_state
             == CommunicationStatus.ESTABLISHED
         )
 
-    def _dynamic_get(self, attr: Attribute) -> None:
-        # pylint: disable=protected-access
+    def _dynamic_get(self: AttributePollingDevice, attr: Attribute) -> None:
         val = self.component_manager._component_state[attr.get_name()]
         if val is None:
             attr.set_quality(AttrQuality.ATTR_INVALID)
@@ -58,13 +73,13 @@ class AttributePollingDevice(SKABaseDevice[AttributePollingComponentManager]):
             attr.set_quality(AttrQuality.ATTR_VALID)
             attr.set_value(val)
 
-    def _dynamic_set(self, attr: WAttribute) -> None:
+    def _dynamic_set(self: AttributePollingDevice, attr: WAttribute) -> None:
         value = attr.get_write_value()
         attr_name = attr.get_name()
         self.component_manager.enqueue_write(attr_name, value)
 
     def _component_state_changed(
-        self,
+        self: AttributePollingDevice,
         fault: bool | None = None,
         power: PowerState | None = None,
         **kwargs: dict[str, Any],

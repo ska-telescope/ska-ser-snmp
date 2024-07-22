@@ -1,3 +1,13 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
+"""This module implements a component manager for snmp devices."""
+from __future__ import annotations
+
 import logging
 from typing import Any, Callable, Generator, Iterable, Mapping, Sequence
 
@@ -9,7 +19,7 @@ from pysnmp.proto.errind import ErrorIndication
 from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
 from ska_tango_base.base import CommunicationStatusCallbackType
 
-from ska_low_itf_devices.attribute_polling_component_manager import (
+from ska_attribute_polling.attribute_polling_component_manager import (
     AttributePollingComponentManager,
     AttrPollRequest,
     AttrPollResponse,
@@ -18,6 +28,8 @@ from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
 
 class SNMPComponentManager(AttributePollingComponentManager):
+    """An implementation of the snmp component manager."""
+
     _attributes: Mapping[str, SNMPAttrInfo]
 
     SNMPCmdFn = Callable[
@@ -32,7 +44,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
     ]
 
     def __init__(  # noqa: D107
-        self,
+        self: SNMPComponentManager,
         host: str,
         port: int,
         authority: str | dict[str, str],
@@ -73,6 +85,10 @@ class SNMPComponentManager(AttributePollingComponentManager):
         Group by writes and reads, chunk, and run the appropriate SNMP command.
 
         Aggregate any returned ObjectTypes from GET commands as the poll response.
+
+        :param poll_request: a list of attributes to poll
+
+        :return: the snmp response
         """
 
         for write_chunk in chunked(
@@ -112,6 +128,11 @@ class SNMPComponentManager(AttributePollingComponentManager):
 
         This is called in enqueue_write() so that any conversion error happens
         early, when an attribute is set, rather than in the polling thread.
+
+        :param attr_name: the name of the attribute to be written
+        :param val: the attribute value to write in snmp type
+
+        :return: the value as an snmp data type
         """
         attr = self._attributes[attr_name]
         return python_to_snmp(attr, val)
@@ -124,6 +145,12 @@ class SNMPComponentManager(AttributePollingComponentManager):
 
         Yields each valued ObjectType in the response in the case of GET, and
         nothing in the case of SET. No other commands are currently supported.
+
+        :param cmd_fn: the snmp command either Get or Set
+        :param objects: lists of OIDs
+
+        :raises error_indication: for snmp failure
+        :yields: the result from snmp command
         """
         iterator = cmd_fn(
             SnmpEngine(),
@@ -136,7 +163,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
         error_indication: ErrorIndication
         result: Iterable[ObjectType]
         for error_indication, _, _, result in iterator:
-            # TODO error handling could be more sophisticated
+            # noqa: T101 TODO error handling could be more sophisticated
             if error_indication:
                 raise error_indication
             yield from result
@@ -144,16 +171,19 @@ class SNMPComponentManager(AttributePollingComponentManager):
     @staticmethod
     def _mib_symbolic(oid: ObjectIdentity) -> tuple[str | int, ...]:
         """
-        Construct a (mib_name, symbol_name, *indexes) tuple from an ObjectIdentity.
+        Construct a (mib_name, symbol_name, indexes) tuple from an ObjectIdentity.
 
         This is nearly the same as ObjectIdentity.getMibSymbol(), but that returns
         the indexes as a nested tuple, which we need to flatten. The returned value
         is suitable to be unpacked as the arguments to ObjectIdentity.__init__().
 
-        There's another complication when dealing with SNMP objects that aren't
-        part of a table (i.e. OIDs whose last segment is "0"). PySNMP returns
+        There is another complication when dealing with SNMP objects that are not
+        part of a table (i.e. OIDs whose last segment is 0). PySNMP returns
         these indexes as ObjectName, rather than Integer32. ObjectName is an
         iterable, which adds another level of nesting that we need to unroll.
+
+        :param oid: an snmp ObjectIdentity
+        :return: ObjectIdentity as a tuple
         """
         mib, name, indices = oid.getMibSymbol()
         indices = (y for x in indices for y in (x if isinstance(x, Iterable) else [x]))

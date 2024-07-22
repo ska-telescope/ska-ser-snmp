@@ -1,0 +1,806 @@
+SEVEN-PRODUCT-MIB DEFINITIONS ::= BEGIN
+
+-- During development all unused/not implemented objects are commented out
+-- to avoid later changes
+
+-- IMPORTS: Include definitions from other mibs here
+IMPORTS
+        OBJECT-TYPE, Integer32, Unsigned32,
+        MODULE-IDENTITY, NOTIFICATION-TYPE, enterprises					FROM SNMPv2-SMI
+        DisplayString									FROM SNMPv2-TC
+        MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP			 	FROM SNMPv2-CONF;
+
+
+-- A brief description and update information about this mib.
+-- (I follow the CamelCase to be sure I don't mistype. Who knows the rules...
+
+sevensolsProducts MODULE-IDENTITY
+    LAST-UPDATED "202004150000Z"
+    ORGANIZATION "Seven Solutions"
+    CONTACT-INFO "postal:   Calle Periodista Rafael Gomez Montero, 2. CETIC-UGR 13, 18014. Granada - SPAIN
+                  email:    TimingSupport@nav-timing.safrangroup.com
+                 "
+    DESCRIPTION  "Seven Solutions Product MIB
+                 "
+    REVISION     "202004150000Z"
+    DESCRIPTION
+        "Third revision."
+    ::= { sevensols 1 }
+
+sevensols                   OBJECT IDENTIFIER ::= { enterprises 49029 }
+wrzTPFamilyMIBNotifications OBJECT IDENTIFIER ::= { sevensols 0 }
+wrzTPFamilyMIBConformance   OBJECT IDENTIFIER ::= { sevensolsProducts 1 }
+wrzTPFamilyMIBCompliances   OBJECT IDENTIFIER ::= { wrzTPFamilyMIBConformance 1 }
+wrzTPFamilyMIBGroups        OBJECT IDENTIFIER ::= { wrzTPFamilyMIBConformance 2 }
+
+-- compliance statements
+
+wrzTPFamilyBasicCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for SNMP entities which
+            implement this MIB module."
+    MODULE  -- this module
+        GROUP   wrzTPFamilyGroup
+        DESCRIPTION
+            "A collection of objects that can be read"
+
+        GROUP   wrzTPFamilySetGroup
+        DESCRIPTION
+            "A collection of objects that can be set"
+
+        GROUP wrzTPFamilyNotObjGroup
+        DESCRIPTION
+            "A collection of objects to be send with traps"
+
+        GROUP wrzTPFamilyNotTrapsGroup
+        DESCRIPTION
+            "Collection of "
+
+    ::= { wrzTPFamilyMIBCompliances 3 }
+
+
+wrzTPFamilyGroup OBJECT-GROUP
+    OBJECTS { wrzGeneralStatus,
+              wrzTimingStatus,
+              wrzSystemStatus,
+              wrzModuleName,
+              wrzModuleStatus,
+              wrzModuleTotalNotSync,
+              wrzModuleTotalWarnings,
+              wrzModuleTotalCriticals,
+              wrzModuleLastBoot,
+              wrzModuleLastSync,
+              wrzParamModuleName,
+              wrzParamPrefixName,
+              wrzParamName,
+              wrzParamType,
+              wrzParamVal,
+              wrzParamUnit,
+              wrzParamStatus,
+              wrzParamLastSync,
+              wrzGeneralStatus,
+              wrzModuleName,
+              wrzModuleStatus,
+              wrzModuleTotalNotSync,
+              wrzModuleTotalWarnings,
+              wrzModuleTotalCriticals,
+              wrzModuleLastBoot,
+              wrzModuleLastSync,
+              wrzParamModuleName,
+              wrzParamPrefixName,
+              wrzParamName,
+              wrzParamType,
+              wrzParamUnit,
+              wrzParamStatus,
+              wrzParamLastSync,
+              wrzParamXModuleName,
+              wrzParamXPrefixName,
+              wrzParamXName,
+              wrzParamXAccess,
+              wrzParamXSetRange,
+              wrzParamXWarningRange,
+              wrzParamXCriticalRange,
+              wrzParamXDescription
+              }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects that can be read"
+    ::= { wrzTPFamilyMIBGroups 8 }
+
+wrzTPFamilySetGroup OBJECT-GROUP
+    OBJECTS { wrzParamVal,
+          wrzParamXConfigVal,
+          wrzCommands
+         }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects that can be set"
+    ::= { wrzTPFamilyMIBGroups 5 }
+
+-- Define typical mib nodes
+wrzTPFamily	 		OBJECT IDENTIFIER ::= { sevensolsProducts 10 }
+wrzTPStatus	 		OBJECT IDENTIFIER ::= { wrzTPFamily 1 }
+
+-- wrzGeneralStatus
+-- OID: (.1.3.6.1.4.1.49029.1.10.1.1)
+
+wrzGeneralStatus   OBJECT-TYPE
+    SYNTAX	  INTEGER {
+            ok(1),
+            warning(2),
+            critical(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+        "ok	 (1) - All is ok in device (health and timing)
+         warning (2) - Device is in alarm status (health and timing),
+         critical(3) - Device is in a critical status (health and timing)
+         "
+    ::= { wrzTPStatus 1 }
+
+-- wrzTimingStatus
+-- OID: (.1.3.6.1.4.1.49029.1.10.1.2)
+wrzTimingStatus   OBJECT-TYPE
+    SYNTAX	  INTEGER {
+            ok(1),
+            warning(2),
+            critical(3),
+            locking(4),
+            unknown(5)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+        "ok	 (1) - Device timing is ok in device,
+         warning (2) - Device timing is in alarm status,
+         critical(3) - Device timing is in a critical status
+         locking (4) - Device timing is in loking state
+         unknown (5) - Device timing is status is unknown
+         "
+    ::= { wrzTPStatus 2 }
+
+-- wrzSystemStatus
+-- OID: (.1.3.6.1.4.1.49029.1.10.1.3)
+wrzSystemStatus   OBJECT-TYPE
+    SYNTAX	  INTEGER {
+            ok(1),
+            warning(2),
+            critical(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+        "ok	 (1) - Device health is ok in device
+         warning (2) - Device health is in alarm status,
+         critical(3) - Device health is in a critical status
+         "
+    ::= { wrzTPStatus 3 }
+
+-- wrzModuleTable
+-- OID: (.1.3.6.1.4.1.49029.1.10.2)
+
+wrzModuleTable OBJECT-TYPE
+    SYNTAX	  SEQUENCE OF WrzModuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "This table has a list of all modules running in the device.
+    With this table you can review the general status of the switch.
+    If one of the parameter in the module has a warning or error you
+    can review it watching column wrzModuleStatus.
+    The rows of this table are preloaded. One row per module."
+    ::= { wrzTPFamily 2 }
+
+wrzModuleEntry OBJECT-TYPE
+    SYNTAX	  WrzModuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "A row describing a given working group"
+    INDEX   { wrzModuleIndex }
+    ::= {wrzModuleTable 1 }
+
+WrzModuleEntry ::= SEQUENCE {
+    wrzModuleIndex			Unsigned32,
+    wrzModuleName			DisplayString,
+    wrzModuleStatus			INTEGER,
+    wrzModuleTotalNotSync		Integer32,
+    wrzModuleTotalWarnings		Integer32,
+    wrzModuleTotalCriticals		Integer32,
+    wrzModuleLastBoot		DisplayString,
+    wrzModuleLastSync		DisplayString
+}
+
+wrzModuleIndex 		OBJECT-TYPE
+    SYNTAX	  Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "The index of the module"
+    ::= { wrzModuleEntry 1 }
+
+wrzModuleName	 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the module"
+    ::= { wrzModuleEntry 2 }
+
+wrzModuleStatus OBJECT-TYPE
+    SYNTAX	  INTEGER {
+                ok(1),
+                modNotShMem(200),
+                modDown(201),
+                modUnknownStatus(202),
+                modParamsNotSync(203),
+                modParamsCritical(204),
+                modParamsWarning(205)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The status of the module.
+        ok(1)			- Module is up and all parameter of the module are ok.
+        modNotShMem(200)	- Cannot find share memory file.
+        modDown(201)		- Module is not running.
+        modUnknownStatus(202)	- Bug state, if not matching with other conditions.
+        modParamsNotSync(203)	- At least one parameter is out of sync.
+        modParamsCritical(204)	- At least one parameter of the module is in critical. range and there aren't parameters out of sync.
+        modParamsWarning(205)	- At least one parameter of the module is in warning range, and there aren't parameters out of sync or in critical range.
+    "
+     ::= { wrzModuleEntry 3 }
+
+wrzModuleTotalNotSync	OBJECT-TYPE
+    SYNTAX	  			Integer32
+    MAX-ACCESS  			read-only
+    STATUS	  			current
+    DESCRIPTION
+    "Time of last boot"
+    ::= { wrzModuleEntry 4 }
+
+wrzModuleTotalWarnings	OBJECT-TYPE
+    SYNTAX	  			Integer32
+    MAX-ACCESS  			read-only
+    STATUS	  			current
+    DESCRIPTION
+    "Time of last boot"
+    ::= { wrzModuleEntry 5 }
+
+wrzModuleTotalCriticals	OBJECT-TYPE
+    SYNTAX	  			Integer32
+    MAX-ACCESS  			read-only
+    STATUS	  			current
+    DESCRIPTION
+    "Time of last boot"
+    ::= { wrzModuleEntry 6 }
+
+wrzModuleLastBoot	OBJECT-TYPE
+    SYNTAX	  	DisplayString
+    MAX-ACCESS  	read-only
+    STATUS	  	current
+    DESCRIPTION
+    "Time of last boot"
+    ::= { wrzModuleEntry 7 }
+
+wrzModuleLastSync	OBJECT-TYPE
+    SYNTAX	  	DisplayString
+    MAX-ACCESS  	read-only
+    STATUS	  	current
+    DESCRIPTION
+    "Time of last boot"
+    ::= { wrzModuleEntry 8 }
+
+
+-- wrzModuleParamTable
+-- OID: (.1.3.6.1.4.1.49029.1.10.3)
+
+wrzParamTable OBJECT-TYPE
+    SYNTAX	  SEQUENCE OF WrzParamEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "This table has a list of parameters running in the switch.
+    This table is related with wrzModuleTable.
+    Each parameter has an index related to its parent module.
+    The rows of this table are preloaded.
+    The values of the parameters can be setting throw SNMP if
+    this parameter allows write operations.
+    Each perameter is identified by its module, prefix and parameter index.
+    This table preload the relationship between indexes and prefixName and paramName.
+    One a parameter is assigned to an index in this table
+    it belongs to this parameter forever.
+    "
+    ::= { wrzTPFamily 3 }
+
+wrzParamEntry OBJECT-TYPE
+    SYNTAX	  WrzParamEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "A row describing a given working group"
+    INDEX   { wrzModuleIndex, wrzParamPrefixIndex, wrzParamIndex }
+    ::= {wrzParamTable 1 }
+
+WrzParamEntry ::= SEQUENCE {
+    wrzParamPrefixIndex	Unsigned32,
+    wrzParamIndex		Unsigned32,
+    wrzParamModuleName	DisplayString,
+    wrzParamPrefixName	DisplayString,
+    wrzParamName		DisplayString,
+    wrzParamType		DisplayString,
+    wrzParamVal		DisplayString,
+    wrzParamUnit		DisplayString,
+    wrzParamStatus		INTEGER,
+    wrzParamLastSync	DisplayString
+}
+
+wrzParamPrefixIndex 		OBJECT-TYPE
+    SYNTAX	  Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "The index of Prefix belongs to a Module."
+    ::= { wrzParamEntry 1 }
+
+wrzParamIndex 		OBJECT-TYPE
+    SYNTAX	  Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "The index of Parameter belongs to a Prefix."
+    ::= { wrzParamEntry 2 }
+
+wrzParamModuleName	 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Module containing the Parameter."
+    ::= { wrzParamEntry 3 }
+
+wrzParamPrefixName	 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Prefix containing the Parameter."
+    ::= { wrzParamEntry 4 }
+
+wrzParamName 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Parameter."
+    ::= { wrzParamEntry 5 }
+
+wrzParamType 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The type of data stored in the Parameter"
+    ::= { wrzParamEntry 6 }
+
+wrzParamVal 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-write
+    STATUS	  current
+    DESCRIPTION
+    "The name value of the Parameter represented as String. Not all the parameters
+    are writable. See wrzParamXAccess."
+    ::= { wrzParamEntry 7 }
+
+wrzParamUnit 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The unit of the parameter."
+    ::= { wrzParamEntry 8 }
+
+wrzParamStatus 	OBJECT-TYPE
+    SYNTAX	   INTEGER {
+                ok(1),
+                modNotShMem(200),
+                modDown(201),
+                modUnknownStatus(202),
+                paramNotFound(301),
+                paramUnknown(302),
+                paramNotSync(303) ,
+                paramCritical(304),
+                paramWarning(305)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The status of the module.
+        ok(1)				- Parameter is ok.
+        modNotShMem(200)		- Cannot find share memory file.
+        modDown(201)			- Module is not running.
+        modUnknownStatus(202)		- Bug state, if not matching with other conditions.
+        paramNotFound(301)		- Parameter is not found in the module. This error happens if an parameter is load for SNMP but module is not supporting this parameter now.
+        paramUnknown(302)		- Bug state, if not matching with other conditions.
+        paramNotSync(303)		- Parameter is not sync with its resource.
+        paramCritical(304)		- Parameter is in critical range and sync.
+        paramWarning(305)		- Parameter is in warning range and sync, and not in critical range.
+        paramUnlicensed(306)		- Parameter is unlicensed.
+        paramDisabled(307)		- Parameter is disabled by owner.
+        "
+    ::= { wrzParamEntry 9 }
+
+wrzParamLastSync 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the IETF Working Group this table describes."
+    ::= { wrzParamEntry 10 }
+
+-- wrzParamXTable
+-- OID: (.1.3.6.1.4.1.49029.1.10.4)
+
+wrzParamXTable OBJECT-TYPE
+    SYNTAX	  SEQUENCE OF WrzParamXEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "This table is an augmented table with extra columns describing the parameters.
+     This table allows change config values, which are loaded when a module starts."
+    ::= { wrzTPFamily 4 }
+
+wrzParamXEntry OBJECT-TYPE
+    SYNTAX	  WrzParamXEntry
+    MAX-ACCESS  not-accessible
+    STATUS	  current
+    DESCRIPTION
+    "A row describing a given working group"
+    AUGMENTS   { wrzParamEntry }
+    ::= {wrzParamXTable 1 }
+
+WrzParamXEntry ::= SEQUENCE {
+    wrzParamXModuleName		DisplayString,
+    wrzParamXPrefixName		DisplayString,
+    wrzParamXName			DisplayString,
+    wrzParamXAccess			INTEGER,
+    wrzParamXConfigVal		DisplayString,
+    wrzParamXSetRange		DisplayString,
+    wrzParamXWarningRange		DisplayString,
+    wrzParamXCriticalRange		DisplayString,
+    wrzParamXDescription		DisplayString
+}
+
+wrzParamXModuleName	 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Module containing the Parameter."
+    ::= { wrzParamXEntry 1 }
+
+wrzParamXPrefixName	 	OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Prefix containing the Parameter."
+    ::= { wrzParamXEntry 2 }
+
+wrzParamXName 			OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The name of the Parameter."
+    ::= { wrzParamXEntry 3 }
+
+wrzParamXAccess 		OBJECT-TYPE
+    SYNTAX	  INTEGER {
+            r(1),
+            rw(2),
+            rl(3),
+            rwl(4)
+    }
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The access to the parameter.
+         r		(1) - The value of the parameter is read-only
+        rw		(2) - The value of the parameter is read-write
+        rl		(3) - The value of the parameter is read-only but it's possible to change config value
+        rwl		(4) - The value of the parameter is read-write and its value is loaded from dot-config file"
+      ::= { wrzParamXEntry 4 }
+
+wrzParamXConfigVal OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-write
+    STATUS	  current
+    DESCRIPTION
+    "The config value of a parameter. This value is loading from .config file to a parameter when modules boot.
+    When you change a value, you can watch the valued marked with an '*'. This means that the Config Value is
+    not been saved yet to its dot-config file. To save all the values marked with '*' use wrzCommands. Review
+    this parameter to understand how to save and apply.
+    "
+    ::= { wrzParamXEntry 5 }
+
+wrzParamXSetRange OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The range with corrects values to set."
+    ::= { wrzParamXEntry 6 }
+
+wrzParamXWarningRange OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The range of values thar are warning values."
+    ::= { wrzParamXEntry 7 }
+
+wrzParamXCriticalRange OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "The range of values thar are critical values."
+    ::= { wrzParamXEntry 8 }
+
+wrzParamXDescription OBJECT-TYPE
+    SYNTAX	  DisplayString
+    MAX-ACCESS  read-only
+    STATUS	  current
+    DESCRIPTION
+    "A description of the Parameter."
+    ::= { wrzParamXEntry 9 }
+
+-- wrzCommands
+-- OID: (.1.3.6.1.4.1.49029.1.10.99)
+
+wrzCommands   OBJECT-TYPE
+    SYNTAX	  INTEGER {
+            reboot(1),
+            powerOff(2),
+             saveConf(3),
+             saveConfApply(4),
+             saveConfReboot(5),
+             rebootSendOk(100),
+             rebootSendFail(101),
+             powerOffSendOk(200),
+             powerOffSendFail(201),
+             saveConfOk(300),
+             saveConfFail(301),
+             saveConfWarning(302),
+             saveConfApplyOk(400),
+             saveConfApplyFail(401),
+             saveConfApplyWarning(402),
+             saveConfRebootOk(500),
+             saveConfRebootFail(501),
+             saveConfRebootWarning(502)
+    }
+    MAX-ACCESS  read-write
+    STATUS	  current
+    DESCRIPTION
+        "Run commands using SNMP. We have 5 options, for each command we received a return value:
+
+         reboot(1)			 	Reboot the switch. Possible returns:
+             rebootSendOk(100), 		Reboot command was executed without errors, we schedule reboot to 5 seconds
+             rebootSendFail(101),		If Reboot sends fails
+
+        rebootFailSafe(2)		 	Reboot the switch in failsafe mode.
+            rebootFailSafeSendOk(200),	Reboot command was executed without errors, we schedule reboot to 5 seconds
+             rebootFailSafeSendFail(201),	If command fails.
+
+        saveConf(3)		 		Save actual values in .conf file (Only loadable values)
+            saveConfOk(300),		The configuration was saved without fails.
+             saveConfFail(301),		The configuration file cannot be created.
+             saveConfWarning(302),		The configuration was created but some paremeters could not be saved.
+
+          saveConfApply(4)			Save actual values in .conf file (Only loadable values) and try to write the values.
+             saveConfApplyOk(400),		All was ok. All was saved and applied
+             saveConfApplyFail(401),		The configuration file cannot be created.
+             saveConfApplyWarning(402),	The configuration file cannot be created, but some parameter could not be saved or applied
+
+        saveConfReboot(5) 		 	Save actual values in .conf file (Only loadable values) and reboot the switch
+            saveConfRebootOk(500),		All was ok.
+             saveConfRebootFail(501),	The configuration file cannot be saved or reboot command fails.
+             saveConfRebootWarning(502)	Some parameters could not be saved in its config file.
+
+         Please read wrztParamXConfigVal to understand how to change config values.
+        "
+
+    ::= { wrzTPFamily 99 }
+
+--
+-- traps
+--
+wrzTPFamilyMIBNotificationObjects  OBJECT IDENTIFIER ::= { sevensols 100 }
+
+-- trap objects
+
+wrzTPFamilyNotObjGroup OBJECT-GROUP
+    OBJECTS { wrzTrapTime,
+              wrzTrapPrmOID,
+              wrzTrapPrmKey,
+              wrzTrapPrmVal,
+              wrzTrapPrmValStr,
+              wrzTrapModOID,
+              wrzTrapModKey
+              }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects that can be send with traps"
+    ::= { wrzTPFamilyMIBGroups 9}
+
+
+-- .1.3.6.1.4.1.49029.100.1.0
+wrzTrapTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "System Time when trap was sended. Format: YYYY/MM/DD HH:MM:SS"
+::= { wrzTPFamilyMIBNotificationObjects 1 }
+
+-- .1.3.6.1.4.1.49029.100.2.0
+wrzTrapPrmOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "OID of parameter related to this trap."
+::= { wrzTPFamilyMIBNotificationObjects 2 }
+
+-- .1.3.6.1.4.1.49029.100.3.0
+wrzTrapPrmKey OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Parameter key (full path)"
+::= { wrzTPFamilyMIBNotificationObjects 3 }
+
+-- .1.3.6.1.4.1.49029.100.4.0
+wrzTrapPrmVal OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Representation of value as number to string, usefull for enum values to get the number and can filter by values. We use string to make it compatible with all data types including f64, uint64, ..."
+::= { wrzTPFamilyMIBNotificationObjects 4 }
+
+-- .1.3.6.1.4.1.49029.100.5.0
+wrzTrapPrmValStr OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "String enum conversion if exists for this value."
+::= { wrzTPFamilyMIBNotificationObjects 5 }
+
+-- .1.3.6.1.4.1.49029.100.6.0
+wrzTrapModOID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "OID of module related to this trap."
+::= { wrzTPFamilyMIBNotificationObjects 6 }
+
+-- .1.3.6.1.4.1.49029.100.7.0
+wrzTrapModKey OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Module name related to this trap."
+::= { wrzTPFamilyMIBNotificationObjects 7 }
+
+-- traps
+
+wrzTPFamilyNotTrapsGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { wrzInit,
+              wrzShutdown,
+              modOpen,
+              modClose,
+              okagainParam,
+              warningParam,
+              criticalParam,
+              outofrangeParam,
+              trackedParam
+              }
+    STATUS  current
+    DESCRIPTION
+            "Collection of traps"
+    ::= { wrzTPFamilyMIBGroups 10 }
+
+--
+-- Start/Shutdown traps
+--
+
+-- .1.3.6.1.4.1.49029.100.1.0
+wrzInit NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION
+        "System init trap. When device starts."
+    ::= { wrzTPFamilyMIBNotifications 1 }
+
+-- .1.3.6.1.4.1.49029.100.2.0
+wrzShutdown NOTIFICATION-TYPE
+    STATUS  current
+    DESCRIPTION
+        "System shutdown. When device shutdown/reboot."
+    ::= { wrzTPFamilyMIBNotifications 2 }
+
+--
+-- Module Open/Close Category
+--
+
+-- .1.3.6.1.4.1.49029.100.3.0
+modOpen NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapModOID, wrzTrapModKey}
+    STATUS  current
+    DESCRIPTION
+        "It is fired when a module (service) starts"
+    ::= { wrzTPFamilyMIBNotifications 3 }
+
+-- .1.3.6.1.4.1.49029.100.4.0
+modClose NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapModOID, wrzTrapModKey}
+    STATUS  current
+    DESCRIPTION
+        "It is fired when a module (service) is closed"
+    ::= { wrzTPFamilyMIBNotifications 4 }
+
+
+--
+-- Parameters status Category
+--
+
+-- .1.3.6.1.4.1.49029.100.5.0
+okagainParam NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapPrmOID, wrzTrapPrmKey, wrzTrapPrmVal, wrzTrapPrmValStr }
+    STATUS  current
+    DESCRIPTION
+        "When a parameter return to an ok state"
+    ::= { wrzTPFamilyMIBNotifications 5 }
+
+-- .1.3.6.1.4.1.49029.100.6.0
+warningParam NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapPrmOID, wrzTrapPrmKey, wrzTrapPrmVal, wrzTrapPrmValStr }
+    STATUS  current
+    DESCRIPTION
+        "When a parameter has a warning value"
+    ::= { wrzTPFamilyMIBNotifications 6 }
+
+-- .1.3.6.1.4.1.49029.100.7.0
+criticalParam NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapPrmOID, wrzTrapPrmKey, wrzTrapPrmVal, wrzTrapPrmValStr }
+    STATUS  current
+    DESCRIPTION
+        "When a parameter has a critical value"
+    ::= { wrzTPFamilyMIBNotifications 7 }
+
+-- .1.3.6.1.4.1.49029.100.8.0
+outofrangeParam NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapPrmOID, wrzTrapPrmKey, wrzTrapPrmVal, wrzTrapPrmValStr }
+    STATUS  current
+    DESCRIPTION
+        "When a parameter has an out of range value"
+    ::= { wrzTPFamilyMIBNotifications 8 }
+
+-- .1.3.6.1.4.1.49029.100.9.0
+trackedParam NOTIFICATION-TYPE
+    OBJECTS     { wrzTrapTime, wrzTrapPrmOID, wrzTrapPrmKey, wrzTrapPrmVal, wrzTrapPrmValStr }
+    STATUS  current
+    DESCRIPTION
+        "When a tracked parameter changes its value"
+    ::= { wrzTPFamilyMIBNotifications 9 }
+
+END
+
+

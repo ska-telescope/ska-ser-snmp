@@ -1,3 +1,10 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 import logging
 import os
 import queue
@@ -38,15 +45,18 @@ def expect_attribute(
     :param timeout: the maximum time to wait, in seconds
     :return: True if the attribute has the expected value within the given timeout
     """
-    logging.debug(
+    #logging.debug(
+    print(
         f"Expecting {tango_device.dev_name()}/{attr} == {value!r} within {timeout}s"
     )
     _queue: SimpleQueue[EventData] = SimpleQueue()
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     subscription_id = tango_device.subscribe_event(
         attr,
         EventType.CHANGE_EVENT,
         _queue.put,
     )
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     deadline = time.time() + timeout
     current_value = object()
     try:
@@ -76,7 +86,7 @@ def expect_attribute(
 
 
 @pytest.fixture(scope="session")
-def simulator():
+def simulator() -> Generator[Any, None, None]:
     if int(os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip()):
         sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
@@ -99,6 +109,7 @@ def simulator():
         try:
             while sim_process.poll() is None:
                 line = sim_process.stderr.readline()
+                print(line)
                 if line.startswith(f"  Listening at UDP/IPv4 endpoint {host}:{port}"):
                     yield host, port
                     break
@@ -110,6 +121,7 @@ def simulator():
                 )
         finally:
             sim_process.send_signal(signal.SIGTERM)
+            sim_process.terminate()
             sim_process.wait()
     else:
         yield None
@@ -126,8 +138,8 @@ def restore(
 
 
 @pytest.fixture
-def definition_path():
-    return Path(__file__).parent.resolve() / "SKA-7357.yaml"
+def definition_path() -> str:
+    return str(Path(__file__).parent.resolve() / "SKA-7357.yaml")
 
 
 @pytest.fixture
@@ -153,10 +165,15 @@ def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
             UpdateRate=0.5,
         ),
     )
+    print(ctx)
     with ctx as dev:
+        print("£££££££££££££££££££££££££££££££££££")
         dev.adminMode = AdminMode.ONLINE
+        print("£££££££££££££££££££££££££££££££££££")
         expect_attribute(dev, "State", DevState.ON)
+        print("£££££££££££££££££££££££££££££££££££")
         assert dev.State() == DevState.ON
+        print("£££££££££££££££££££££££££££££££££££")
         yield dev
         dev.adminMode = AdminMode.OFFLINE
         expect_attribute(dev, "State", DevState.DISABLE)

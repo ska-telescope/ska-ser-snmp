@@ -3,36 +3,34 @@ requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "ska-low-itf-devices"
+name = "ska-ser-snmp"
 version = "0.2.0"
-description = "Python package for LOW ITF equipment tango devices"
-authors = ["Malte Marquarding <malte.marquarding@csiro.au>"]
+description = "Python package for snmp tango devices"
+authors = []
 license = "BSD 3-clause new license"
 packages = [
-    { include = "ska_low_itf_devices", from = "src" },
-    { include = "ska_proxr_device", from = "src" },
+    { include = "ska_attribute_polling", from = "src" },
     { include = "ska_snmp_device", from = "src" },
 ]
 
 [tool.poetry.dependencies]
-python = "~3.10"  # otherwise we don't get ska-tango-base 0.18.1
+python = "~3.10"  
 pytango = "^9.4.2"
 PyYAML = "^6.0"
-ska-tango-base = "^0.18.1"
-ska-ser-devices = "^0.1.1"
+ska-tango-base = "^1.0.0"
 pysnmp-lextudio = "^5.0.27"
 more-itertools = "^10.1.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
+black = "^24.2.0"
 isort = "^5.10.1"
-flake8 = "^6.0.0"
+flake8 = "^7.0.0"
 flake8-docstrings = "^1.7.0"
 flake8-pyproject = "^1.2.3"
 mypy = "^1.3.0"
 pylint = "^2.17.2"
 pylint-junit = "^0.3.2"
-pytest = "^7.3.1"
+pytest = "^7.1.3"
 pytest-cov = "^4.0.0"
 pytest-forked = "^1.4.0"
 pytest-json-report = "^1.5.0"

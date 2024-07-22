@@ -1,3 +1,10 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 """
 Functions to handle translation between PyTango- and PySNMP-compatible types.
 
@@ -18,7 +25,7 @@ from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
 from tango import AttrDataFormat, DevULong64
 
-from ska_low_itf_devices.attribute_polling_component_manager import AttrInfo
+from ska_attribute_polling.attribute_polling_component_manager import AttrInfo
 
 _SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum_INVALID_"
 
@@ -29,11 +36,20 @@ class BitEnum(IntEnum):
 
 @dataclass(frozen=True)
 class SNMPAttrInfo(AttrInfo):
+    """Helper class to hold attribute information."""
+
     identity: tuple[str | int, ...]
 
 
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
-    """Coerce a PySNMP value to a PyTango-compatible Python type."""
+    """
+    Coerce a PySNMP value to a PyTango-compatible Python type.
+
+    :param attr: attribute information
+    :param value: data type of the attribute
+
+    :return: the python value
+    """
     if isinstance(value, Integer):
         return int(value)
     if isinstance(value, Bits):
@@ -55,6 +71,12 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
     This has less work to do than snmp_to_python(), as PySNMP does a pretty
     good job of type coercion. We don't actually have to create an Asn1Type
     object here; that happens deep in the bowels of PySNMP.
+
+    :param attr: attribute information
+    :param value: data type of the attribute
+
+    :raises ValueError: If there is an invalid enum
+    :return: the snmp value
     """
     if issubclass(attr.dtype, BitEnum):
         n_bytes = ceil(len(attr.dtype) / 8)
@@ -77,6 +99,10 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
 
     Currently only strings, enums, bits, and various kinds of ints are implemented,
     but adding more types will be a matter of adding more cases to this if statement.
+
+    :param snmp_type: snmp data type of the attribute
+
+    :return: tango server attribute info
     """
     attr_args: dict[str, Any] = {}
     if isinstance(snmp_type, Bits):
@@ -133,8 +159,11 @@ def _enum_from_named_values(
     """
     Create an Enum subclass from a NamedValues object.
 
-    NamedValues is the class PySNMP uses to represent the named values
-    of an INTEGER or BITS object, if they are declared in the MIB.
+    :param named_values: is the class PySNMP uses to represent the named values
+        of an INTEGER or BITS object, if they are declared in the MIB.
+    :param cls: data type class
+
+    :return: the tango enum
     """
     valued_names = {int_val: name for name, int_val in named_values.items()}
 
@@ -153,6 +182,12 @@ def _range_intersection(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, in
     Return the intersection of ranges a and b, defined as (start, end) tuples.
 
     Ranges are inclusive of their bounds. If they don't intersect, raise ValueError.
+
+    :param a: start,stop values of a range to be compared to b
+    :param b: start,stop values of a range to be compared to a
+
+    :raises ValueError: range do not intersect
+    :return: the start,stop intersection values
     """
     # pylint: disable=invalid-name
     c = max(a[0], b[0]), min(a[1], b[1])

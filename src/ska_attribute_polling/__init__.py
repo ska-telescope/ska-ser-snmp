@@ -5,12 +5,6 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
-"""
-This package provides a generic Tango device class for controlling SNMP devices.
-"""
+"""Module for ska_attribute_polling."""
 
 __version__ = "0.2.0"
-
-__all__ = ["SNMPDevice"]
-
-from .snmp_device import SNMPDevice

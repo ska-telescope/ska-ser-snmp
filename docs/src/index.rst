@@ -1,7 +1,7 @@
-ska-low-itf-devices
-===================
+ska-ser-snmp
+============
 
-This project supports monitoring and control of LOW ITF devices within
+This project supports monitoring and control of SNMP devices within
 the `Square Kilometre Array`_.
 
 .. _Square Kilometre Array: https://skatelescope.org/
@@ -11,6 +11,7 @@ the `Square Kilometre Array`_.
    :caption: Contents:
 
    api/index
+   guide/howto
 
 Indices and tables
 ==================
