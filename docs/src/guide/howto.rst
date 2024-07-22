@@ -1,15 +1,14 @@
-# ska_snmp_device.SNMPDevice
+==========================
+ska_snmp_device.SNMPDevice
+==========================
 
 This is a generic SNMP Tango device class for monitoring and control of any
 device that supports SNMP. It's configured using a YAML definition file, which
 maps SNMP objects to Tango attributes, which are dynamically created when the
-device is initialised. Here's a basic example defining a single attribute:
-
-```yaml
-attributes:
-  - name: deviceDescription
-    oid: [ SNMPv2-MIB, sysDescr, 0 ]
-```
+device is initialised. Here's a basic example defining a single attribute::
+  attributes:
+    - name: deviceDescription
+      oid: [ SNMPv2-MIB, sysDescr, 0 ]
 
 Attributes are defined with reference to SNMP MIBs - files that describe which
 SNMP objects are available on a particular device. The `oid` field is made up
@@ -17,12 +16,13 @@ of a MIB name ("SNMPv2-MIB" in the example above), an object name ("sysDescr")
 and one or more indexes. For more info about these, see below.
 
 The most important Tango properties supported by SNMPDevice are:
-* `DeviceDefinition`, the path to a device definition YAML file
-* `Host`, the IP or DNS name of the SNMP endpoint of the device under control
-* `Port`, the port of the SNMP endpoint, which defaults to 161
-* `Community`, the SNMPv2 community name to use
+  * `DeviceDefinition`, the path to a device definition YAML file
+  * `Host`, the IP or DNS name of the SNMP endpoint of the device under control
+  * `Port`, the port of the SNMP endpoint, which defaults to 161
+  * `Community`, the SNMPv2 community name to use
 
-## Getting started with local development
+Getting started with local development
+--------------------------------------
 
 1. Clone this repo.
 2. Obtain a MIB file for the device you want to control.  
@@ -38,47 +38,49 @@ The most important Tango properties supported by SNMPDevice are:
 5. Create your Tango device however you create Tango devices.  
    Set the attributes Host, Port, Community and DeviceDefinition appropriately
 
-## The device definition file syntax
+The device definition file syntax
+---------------------------------
 
 The following example defines a minimal device for an Enlogic EN6808 PDU,
-with attributes for reporting and setting the state of each of the 24 outlets.
+with attributes for reporting and setting the state of each of the 24 outlets::
 
-```yaml
-attributes:
-  - name: deviceDescription
-    oid: [ SNMPv2-MIB, sysDescr, 0 ]
-    polling_period: .inf
+    attributes:
+      - name: deviceDescription
+        oid: [ SNMPv2-MIB, sysDescr, 0 ]
+        polling_period: .inf
+        
+      - name: firmwareVersion
+        oid: [ ENLOGIC-PDU-MIB, pduNamePlateFirmwareVersion, 1 ]
+        polling_period: .inf
     
-  - name: firmwareVersion
-    oid: [ ENLOGIC-PDU-MIB, pduNamePlateFirmwareVersion, 1 ]
-    polling_period: .inf
+      - name: serialNumber
+        oid: [ ENLOGIC-PDU-MIB, pduNamePlateSerialNumber, 1 ]
+        polling_period: .inf
+    
+      - name: outlet{}State
+        oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1]
+        indexes:
+          - [1, 24]
+    
+      - name: outlet{}Command
+        oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1]
+        indexes:
+          - [1, 24]
+        polling_period: 10000
 
-  - name: serialNumber
-    oid: [ ENLOGIC-PDU-MIB, pduNamePlateSerialNumber, 1 ]
-    polling_period: .inf
-
-  - name: outlet{}State
-    oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1]
-    indexes:
-      - [1, 24]
-
-  - name: outlet{}Command
-    oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedControlCommand, 1]
-    indexes:
-      - [1, 24]
-    polling_period: 10000
-```
-
-### `name`
+name
+^^^^
 
 Pretty straightforward. This defines the Tango attribute's name. But note the
 `{}`s in `outlet{}Command` and `outlet{}State` - these are placeholders which
 are used when `indexes` is defined.
 
-### `oid`
+oid
+^^^
 
-Defines the SNMP object this attribute will represent, in the form
-`<mib-name>, <object name>, [<index>, ...]`.
+Defines the SNMP object this attribute will represent, in the form::
+
+  <mib-name>, <object name>, [<index>, ...].
 
 The MIB name must correspond to a MIB file present on the filesystem, in
 `$PWD/mib_library`, `/usr/share/snmp/mibs`, or `/usr/share/mibs` (these
@@ -95,7 +97,8 @@ the table definition.
 
 If the `indexes` key is defined, the OID will be extended as described below.
 
-### `indexes`
+indexes
+^^^^^^^
 
 SNMP objects can either be scalar - that is, there is only one of them - or
 part of a table, in which case multiple indexed instances of the object exist.
@@ -108,22 +111,21 @@ specified by `indexes` - in this case, 1 to 24. The `name` field is templated
 device would end up with attributes `outlet1State`, `outlet2State`, etc. The
 index value will be appended to the `oid` for each attribute.
 
-For example, the `outlet{}State` definition above is equivalent to
+For example, the `outlet{}State` definition above is equivalent to::
 
-```yaml
   - name: outlet1State
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1, 1]
   - name: outlet2State
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1, 2]
 
-...outlets 3 to 23...
+outlets 3 to 23::
 
   - name: outlet24State
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1, 24]
-```
 
 
-### `polling_period`
+polling_period
+^^^^^^^^^^^^^^
 
 It's handy to be able to query different SNMP objects at different rates. For
 example, the value of the `serialNumber` attribute above will never change.
@@ -135,11 +137,13 @@ Setting `polling_period: 10000` means the object won't be queried any more
 frequently than once every 10 seconds. Setting it to `polling_period: .inf`
 means it will be polled only once.
 
-## Roadmap
+Roadmap
+=======
 * Use BULK operations
 * Ability to generate Tango commands, not only attributes
 
-## More about MIBs and OIDs
+More about MIBs and OIDs
+========================
 
 SNMP objects are organised in a global hierarchy. Each object is given an OID
 which is a globally-unique sequence of numbers - for example, the OID for the
@@ -149,7 +153,8 @@ a MIB also has a textual representation, which we use in our definition file.
 
 Read more about how MIBs and OIDs work [here](https://kb.paessler.com/en/topic/653-how-do-snmp-mibs-and-oids-work).
 
-## Providing multiple `indexes`
+Providing multiple `indexes`
+============================
 
 You'll note that in the examples, `indexes` is a list of lists. Usually you
 will only need to provide one index for an attribute, but it's possible to
@@ -165,13 +170,13 @@ indexes `[1, 2]` and `[5, 6]`, attributes will be created for the index values
 the attributes' OIDs, and passed positionally to Python's `str.format()` when
 generating the attributes' names.
 
-Our outlet state attribute above could have been defined more verbosely as:
-```yaml
+Our outlet state attribute above could have been defined more verbosely as::
+
   - name: outlet{1}State
     oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState]  # no indexes here!
     indexes:
       - [1, 1]
       - [1, 24]
-```
+
 Note we use `{1}` instead of `{}` in the name template - this means we're
-referring to the second (zero-indexed) index value.
+referring to the second (zero-indexed) inde
