@@ -37,16 +37,16 @@ def test_int(snmp_device: DeviceProxy) -> None:
         expect_attribute(snmp_device, "writeableInt", 10)
 
 
-def test_bits(snmp_device: DeviceProxy, simulator_value: Any) -> None:
+def test_bits(snmp_device: DeviceProxy, simulator: Any) -> None:
     """
     Test a bit enum (can be specific for EN6808)
 
     :param snmp_device: the snmp device under test
-    :param simulator_value: simulated value oor None for EN6808 hack
+    :param simulator: if simulator not defined then EN6808 hack
     """
     # Hack for EN6808-specific behaviour, where you can't
     # write [], so you set the 4 bit to clear all the others
-    setval = object if simulator_value else [4]
+    setval = object if simulator else [4]
 
     with restore(snmp_device, "bitEnum", setval=setval):
         snmp_device.bitEnum = [0]
