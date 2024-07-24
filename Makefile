@@ -26,7 +26,7 @@ docs-pre-build:
 include .make/python.mk
 
 PYTHON_LINE_LENGTH = 88
-PYTHON_LINT_TARGET = src #tests  ## Paths containing python to be formatted and linted
+PYTHON_LINT_TARGET = src tests  ## Paths containing python to be formatted and linted
 PYTHON_VARS_AFTER_PYTEST = -v --forked 
 
 PYTHON_TEST_FILE = tests

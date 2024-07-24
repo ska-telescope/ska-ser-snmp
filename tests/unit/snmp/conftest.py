@@ -5,6 +5,8 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
+"""This module defines a pytest harness for testing ska-ser-snmp."""
+
 import logging
 import os
 import queue
@@ -25,6 +27,7 @@ from tango.test_context import DeviceTestContext
 from ska_snmp_device.snmp_device import SNMPDevice
 
 
+# pylint: disable=too-many-nested-blocks
 def expect_attribute(
     tango_device: DeviceProxy,
     attr: str,
@@ -45,18 +48,15 @@ def expect_attribute(
     :param timeout: the maximum time to wait, in seconds
     :return: True if the attribute has the expected value within the given timeout
     """
-    #logging.debug(
-    print(
+    logging.debug(
         f"Expecting {tango_device.dev_name()}/{attr} == {value!r} within {timeout}s"
     )
     _queue: SimpleQueue[EventData] = SimpleQueue()
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     subscription_id = tango_device.subscribe_event(
         attr,
         EventType.CHANGE_EVENT,
         _queue.put,
     )
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     deadline = time.time() + timeout
     current_value = object()
     try:
@@ -77,16 +77,24 @@ def expect_attribute(
                         return True
                 elif current_value == value:
                     return True
-    except queue.Empty:
+    except queue.Empty as exc:
         raise TimeoutError(
-            f"{tango_device.dev_name()}/{attr} was not {value!r} within {timeout}s, last value was {current_value}"
-        )
+            f"{tango_device.dev_name()}/{attr} was not {value!r} within {timeout}s,"
+            f" last value was {current_value}"
+        ) from exc
     finally:
         tango_device.unsubscribe_event(subscription_id)
 
 
-@pytest.fixture(scope="session")
-def simulator() -> Generator[Any, None, None]:
+# pylint: disable=consider-using-with
+@pytest.fixture(scope="session", name="simulator")
+def simulator_fixture() -> Generator[Any, None, None]:
+    """
+    Create a simulator for snmp unit testing.
+
+    :yields: host & port else None
+    :raises RuntimeError: Simulator failed"
+    """
     if int(os.getenv("SKA_SNMP_DEVICE_SIMULATOR", "1").strip()):
         sim_user = os.getenv("SKA_SNMP_DEVICE_SIMULATOR_USER", "").strip()
         if sim_user:
@@ -100,7 +108,10 @@ def simulator() -> Generator[Any, None, None]:
                 "snmpsim-command-responder",
                 *user_args,
                 "--data-dir=tests/snmpsim_data",
-                "--variation-module-options=sql:dbtype:sqlite3,database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec",
+                (
+                    "--variation-module-options=sql:dbtype:sqlite3,"
+                    "database:tests/snmpsim_data/snmpsim.db,dbtable:snmprec"
+                ),
                 f"--agent-udpv4-endpoint={host}:{port}",
             ],
             encoding="utf-8",
@@ -109,7 +120,6 @@ def simulator() -> Generator[Any, None, None]:
         try:
             while sim_process.poll() is None:
                 line = sim_process.stderr.readline()
-                print(line)
                 if line.startswith(f"  Listening at UDP/IPv4 endpoint {host}:{port}"):
                     yield host, port
                     break
@@ -117,7 +127,8 @@ def simulator() -> Generator[Any, None, None]:
                 cmd = " ".join(sim_process.args)
                 return_code = sim_process.returncode
                 raise RuntimeError(
-                    f'Simulator command "{cmd}" exited with code {return_code} without ever listening'
+                    f'Simulator command "{cmd}" exited with code {return_code}'
+                    " without ever listening"
                 )
         finally:
             sim_process.send_signal(signal.SIGTERM)
@@ -131,49 +142,69 @@ def simulator() -> Generator[Any, None, None]:
 def restore(
     dev: DeviceProxy, attr: str, setval: Any = object
 ) -> Generator[Any, None, None]:
+    """
+    Restore an attribute value
+
+    :param dev: tango device proxy
+    :param attr: the attribute to restore its value
+
+    :return: the old value
+    """
     old_val = getattr(dev, attr)
     yield old_val
     setattr(dev, attr, old_val if setval is object else setval)
     expect_attribute(dev, attr, old_val, timeout=15)
 
 
-@pytest.fixture
-def definition_path() -> str:
+@pytest.fixture(name="definition_path")
+def definition_path_fixture() -> str:
+    """
+    Specify the location of the configuration file.
+
+    :return: the fully qualified filename
+    """
     return str(Path(__file__).parent.resolve() / "SKA-7357.yaml")
 
 
-@pytest.fixture
-def endpoint(simulator: tuple[str, int]) -> tuple[str, int]:
+@pytest.fixture(name="endpoint")
+def endpoint_fixture(simulator: tuple[str, int]) -> tuple[str, int]:
+    """
+    Define an endpoint.
+
+    :param simulator: the simulator endpoint
+    :return: the host & port
+    """
     if simulator:
         return simulator
-    else:
-        host, port = os.getenv("SKA_SNMP_DEVICE_TEST_ENDPOINT").strip().split(":")
-        return host, int(port)
+    host, port = os.getenv("SKA_SNMP_DEVICE_TEST_ENDPOINT").strip().split(":")
+    return host, int(port)
 
 
-@pytest.fixture
-def snmp_device(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
+@pytest.fixture(name="snmp_device")
+def snmp_device_fixture(definition_path: str, endpoint: tuple[str, int]) -> DeviceProxy:
+    """
+    Create a tango device context for the whiterabbit.
+
+    :param definition_path: cofiguration file location
+    :param endpoint: host & port :yields: the hite rabbit device context
+    :yields: whiterabbit device
+    """
     host, port = endpoint
     ctx = DeviceTestContext(
         SNMPDevice,
-        properties=dict(
-            DeviceDefinition=definition_path,
-            Host=host,
-            Port=port,
-            V2Community="private",
-            LoggingLevelDefault=5,
-            UpdateRate=0.5,
-        ),
+        properties={
+            "DeviceDefinition": definition_path,
+            "Host": host,
+            "Port": port,
+            "V2Community": "private",
+            "LoggingLevelDefault": 5,
+            "UpdateRate": 0.5,
+        },
     )
-    print(ctx)
     with ctx as dev:
-        print("£££££££££££££££££££££££££££££££££££")
         dev.adminMode = AdminMode.ONLINE
-        print("£££££££££££££££££££££££££££££££££££")
         expect_attribute(dev, "State", DevState.ON)
-        print("£££££££££££££££££££££££££££££££££££")
         assert dev.State() == DevState.ON
-        print("£££££££££££££££££££££££££££££££££££")
         yield dev
         dev.adminMode = AdminMode.OFFLINE
         expect_attribute(dev, "State", DevState.DISABLE)

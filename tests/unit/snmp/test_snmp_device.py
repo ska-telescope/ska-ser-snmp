@@ -5,6 +5,8 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
+"""This module defines the device tests for ska-ser-snmp."""
+
 import queue
 import random
 import string
@@ -23,6 +25,11 @@ from .conftest import expect_attribute, restore
 
 
 def test_int(snmp_device: DeviceProxy) -> None:
+    """
+    Test a writeable integer.
+
+    :param snmp_device: the snmp device under test
+    """
     with restore(snmp_device, "writeableInt"):
         snmp_device.writeableInt = 5
         expect_attribute(snmp_device, "writeableInt", 5)
@@ -30,10 +37,16 @@ def test_int(snmp_device: DeviceProxy) -> None:
         expect_attribute(snmp_device, "writeableInt", 10)
 
 
-def test_bits(snmp_device: DeviceProxy, simulator: Any) -> None:
+def test_bits(snmp_device: DeviceProxy, simulator_value: Any) -> None:
+    """
+    Test a bit enum (can be specific for EN6808)
+
+    :param snmp_device: the snmp device under test
+    :param simulator_value: simulated value oor None for EN6808 hack
+    """
     # Hack for EN6808-specific behaviour, where you can't
     # write [], so you set the 4 bit to clear all the others
-    setval = object if simulator else [4]
+    setval = object if simulator_value else [4]
 
     with restore(snmp_device, "bitEnum", setval=setval):
         snmp_device.bitEnum = [0]
@@ -47,6 +60,11 @@ def test_bits(snmp_device: DeviceProxy, simulator: Any) -> None:
 
 
 def test_string(snmp_device: DeviceProxy) -> None:
+    """
+    Test a writeable string.
+
+    :param snmp_device: the snmp device under test
+    """
     with restore(snmp_device, "writeableString"):
         name = "test-" + "".join(random.choices(string.ascii_letters, k=4))
         snmp_device.writeableString = name
@@ -54,6 +72,11 @@ def test_string(snmp_device: DeviceProxy) -> None:
 
 
 def test_enum(snmp_device: DeviceProxy) -> None:
+    """
+    Test an writeable enum.
+
+    :param snmp_device: the snmp device under test
+    """
     with restore(snmp_device, "writeableEnum") as current:
         assert isinstance(current, Enum)
         dtype = type(current)
@@ -65,11 +88,21 @@ def test_enum(snmp_device: DeviceProxy) -> None:
 
 
 def test_enum_invalid(snmp_device: DeviceProxy) -> None:
+    """
+    Test an invalid enum.
+
+    :param snmp_device: the snmp device under test
+    """
     with pytest.raises(DevFailed, match="ValueError: Enum value 0"):
         snmp_device.writeableEnumWithInvalid = 0
 
 
 def test_enum_nonsequential(snmp_device: DeviceProxy) -> None:
+    """
+    Test a non-sequential enum.
+
+    :param snmp_device: the snmp device under test
+    """
     dtype = type(snmp_device.nonSequentialEnum)
     expected = {
         1: "temperature",
@@ -94,6 +127,11 @@ def test_enum_nonsequential(snmp_device: DeviceProxy) -> None:
 
 
 def test_constrained_int(snmp_device: DeviceProxy) -> None:
+    """
+    Test a constrained integer with min/max values.
+
+    :param snmp_device: the snmp device under test
+    """
     attr_config = snmp_device.get_attribute_config("writeableConstrainedInt")
     assert attr_config.min_value == "0"
     assert attr_config.max_value == "3600"
@@ -102,6 +140,12 @@ def test_constrained_int(snmp_device: DeviceProxy) -> None:
 
 
 def test_polling_period(snmp_device: DeviceProxy, simulator: Any) -> None:
+    """
+    Test the polling period.
+
+    :param snmp_device: the snmp device under test
+    :param simulator: if defined the test will be skipped
+    """
     if simulator:
         # These attrs map to SNMP objects - uptime and SNMP packets -
         # that on a real device are always changing. On the simulator,

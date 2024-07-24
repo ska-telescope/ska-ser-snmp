@@ -5,6 +5,8 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
+"""This module defines the component manager tests for ska-ser-snmp."""
+
 import logging
 import time
 from typing import Any
@@ -16,8 +18,15 @@ from ska_snmp_device.snmp_component_manager import SNMPComponentManager
 from ska_snmp_device.types import SNMPAttrInfo
 
 
-@pytest.fixture
-def component_manager(endpoint: tuple[str, int]) -> SNMPComponentManager:
+@pytest.fixture(name="component_manager")
+def component_manager_fixture(endpoint: tuple[str, int]) -> SNMPComponentManager:
+    """
+    Create an snmp component manager.
+
+    :param endpoint: host & port :yields: the hite rabbit device context
+    :return: snmp component manager
+    """
+
     def comm_state_changed(comm_state: CommunicationStatus) -> None:
         pass
 
@@ -35,18 +44,18 @@ def component_manager(endpoint: tuple[str, int]) -> SNMPComponentManager:
         component_state_callback=component_state_changed,
         attributes=[
             SNMPAttrInfo(
-                attr_args=dict(
-                    name="fast",
-                    dtype=int,
-                ),
+                attr_args={
+                    "name": "fast",
+                    "dtype": int,
+                },
                 polling_period=0.5,
                 identity=("MIB", "tastic", 1),
             ),
             SNMPAttrInfo(
-                attr_args=dict(
-                    name="slow",
-                    dtype=int,
-                ),
+                attr_args={
+                    "name": "slow",
+                    "dtype": int,
+                },
                 polling_period=1.0,
                 identity=("MIB", "tastic", 2),
             ),
@@ -56,7 +65,14 @@ def component_manager(endpoint: tuple[str, int]) -> SNMPComponentManager:
     )
 
 
-def test_component_manager_polling_periods(component_manager: SNMPComponentManager) -> None:
+def test_component_manager_polling_periods(
+    component_manager: SNMPComponentManager,
+) -> None:
+    """
+    Test snmp polling period.
+
+    :param component_manager: the snmp component manager
+    """
     mgr = component_manager
     assert all(t == float("-inf") for t in mgr._last_polled.values())
 
