@@ -46,6 +46,8 @@ def expect_attribute(
     :param attr: the name of the attribute to be monitored
     :param value: the attribute value we're waiting for
     :param timeout: the maximum time to wait, in seconds
+
+    :raises TimeoutError: No response from server
     :return: True if the attribute has the expected value within the given timeout
     """
     logging.debug(
@@ -148,7 +150,7 @@ def restore(
     :param dev: tango device proxy
     :param attr: the attribute to restore its value
 
-    :return: the old value
+    :yields: the old value
     """
     old_val = getattr(dev, attr)
     yield old_val

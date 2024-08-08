@@ -90,7 +90,6 @@ class SNMPComponentManager(AttributePollingComponentManager):
 
         :return: the snmp response
         """
-
         for write_chunk in chunked(
             poll_request.writes.items(), self._max_objects_per_pdu
         ):
