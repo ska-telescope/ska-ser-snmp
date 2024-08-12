@@ -1,3 +1,13 @@
+#  -*- coding: utf-8 -*-
+#
+# This file is part of the SKA SER SNMP project
+#
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
+"""This module implements a generic attribute polling component manager."""
+from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
@@ -12,6 +22,8 @@ from ska_tango_base.poller import PollingComponentManager
 
 @dataclass
 class AttrPollRequest:
+    """Helper class to hold read/write requests passed to the poller."""
+
     writes: dict[str, Any]
     reads: list[str]
 
@@ -36,19 +48,21 @@ class AttrInfo:
     polling_period: float
 
     @cached_property
-    def dtype(self) -> Any:  # noqa: D102
+    def dtype(self: AttrInfo) -> Any:  # noqa: D102
         return self.attr_args["dtype"]
 
     @cached_property
-    def name(self) -> str:  # noqa: D102
+    def name(self: AttrInfo) -> str:  # noqa: D102
         return cast(str, self.attr_args["name"])
 
 
 class AttributePollingComponentManager(
     PollingComponentManager[AttrPollRequest, AttrPollResponse]
 ):
+    """An implementation of the attribute polling component manager."""
+
     def __init__(  # noqa: D107
-        self,
+        self: AttributePollingComponentManager,
         logger: logging.Logger,
         communication_state_callback: CommunicationStatusCallbackType,
         component_state_callback: Callable[..., None],
@@ -76,13 +90,15 @@ class AttributePollingComponentManager(
         # used to calculate when to poll again based on polling_period
         self._last_polled = {attr.name: float("-inf") for attr in attributes}
 
-    def get_request(self) -> AttrPollRequest:
+    def get_request(self: AttributePollingComponentManager) -> AttrPollRequest:
         """
         Assemble a list of ObjectTypes representing pending writes and reads.
 
         The writes appear first, and come from `self._pending_writes`. Reads
         are requested for each attribute whose last successful poll happened
         longer ago than its polling period, and each attribute being written.
+
+        :return: a list of attributes that should be polled next.
         """
         # atomically drain the write queue
         writes = dict(iter_except(self._pending_writes.popitem, KeyError))
@@ -97,19 +113,29 @@ class AttributePollingComponentManager(
 
         return AttrPollRequest(writes, reads)
 
-    def poll(self, poll_request: AttrPollRequest) -> AttrPollResponse:
+    def poll(
+        self: AttributePollingComponentManager, poll_request: AttrPollRequest
+    ) -> AttrPollResponse:
         """
         Group by writes and reads, chunk, and run the appropriate SNMP command.
 
         Aggregate any returned ObjectTypes from GET commands as the poll response.
+
+        :param poll_request: group of read & write attribute requests to poll
+
+        :raises NotImplementedError: up to the subclass
         """
         raise NotImplementedError
 
-    def poll_succeeded(self, poll_response: AttrPollResponse) -> None:
+    def poll_succeeded(
+        self: AttributePollingComponentManager, poll_response: AttrPollResponse
+    ) -> None:
         """
         Notify the device of the return values of a successful poll.
 
         This involves type coercion from PySNMP- to PyTango-compatible types.
+
+        :param poll_response: the snmp response
         """
         super().poll_succeeded(poll_response)
 
@@ -118,66 +144,90 @@ class AttributePollingComponentManager(
 
         self._update_component_state(power=PowerState.ON, **poll_response)
 
-    def enqueue_write(self, attr_name: str, val: Any) -> None:
+    def enqueue_write(
+        self: AttributePollingComponentManager, attr_name: str, val: Any
+    ) -> None:
         """
         Queue an attribute value to be written on the next poll.
 
         If there is already a write pending for the attribute, it will be superseded.
+
+        :param attr_name: the name of the attribute to be written
+        :param val: the attribute value to write
         """
         converted_value = self.from_python(attr_name, val)
         self._pending_writes[attr_name] = converted_value
 
-    def from_python(self, attr_name: str, val: Any) -> Any:
+    def from_python(
+        self: AttributePollingComponentManager, attr_name: str, val: Any
+    ) -> Any:
         """
         Convert from raw Python type to a hardware-compatible type.
 
         This is called in enqueue_write() so that any conversion error happens
         early, when an attribute is set, rather than in the polling thread.
+
+        :param attr_name: the name of the attribute to be written
+        :param val: the attribute value to write in snmp type
+
+        :return: the value as an snmp data type
         """
         # pylint: disable=unused-argument
         return val
 
     def off(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
     ) -> tuple[TaskStatus, str]:
         if True:  # pylint: disable=using-constant-test
             raise NotImplementedError(
-                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby or reset"
             )
 
     def standby(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
     ) -> tuple[TaskStatus, str]:
         if True:  # pylint: disable=using-constant-test
             raise NotImplementedError(
-                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby, reset or abort"
             )
 
     def on(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
     ) -> tuple[TaskStatus, str]:
         if True:  # pylint: disable=using-constant-test
             raise NotImplementedError(
-                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby, reset or abort"
             )
 
     def reset(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
     ) -> tuple[TaskStatus, str]:
         if True:  # pylint: disable=using-constant-test
             raise NotImplementedError(
-                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby, reset or abort"
             )
 
     def abort_commands(  # noqa: D102
-        self, task_callback: TaskCallbackType | None = None
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
     ) -> tuple[TaskStatus, str]:
         if True:  # pylint: disable=using-constant-test
             raise NotImplementedError(
-                "AttributePollingComponentManager doesn't implement on, off, standby or reset"
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby, reset or abort"
             )
 
-    def poll_failed(self, exception: Exception) -> None:
+    def poll_failed(
+        self: AttributePollingComponentManager, exception: Exception
+    ) -> None:
         """
         Set PowerState.UNKNOWN when polling fails.
 

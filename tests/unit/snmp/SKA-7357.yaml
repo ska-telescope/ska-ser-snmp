@@ -27,3 +27,5 @@ attributes:
 
   - name: writeableConstrainedInt
     oid: [ ENLOGIC-PDU-MIB, pduUnitConfigColdstartDelay, 1]
+    min_value: 0
+    max_value: 3600

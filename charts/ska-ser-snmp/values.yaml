@@ -47,14 +47,3 @@ deviceServers:
   #          UpdateRate: 2.0
   #          LoggingLevelDefault: 4
   #          Host->polling_period: 5000
-  #
-  #  artefact.skao.int/ska-proxr-device:0.2.0
-  #    switchrelay:
-  #      ska_proxr_device.ProXRDevice:
-  #        low-itf/switchrelay/1:
-  #          NumberOfRelays: 8
-  #          Host: 10.135.151.35
-  #          Port: 5025
-  #          UpdateRate: 2.0
-  #          LoggingLevelDefault: 4
-

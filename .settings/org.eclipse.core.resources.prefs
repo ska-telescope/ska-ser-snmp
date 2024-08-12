@@ -1,0 +1,17 @@
+eclipse.preferences.version=1
+encoding//src/ska_attribute_polling/__init__.py=utf-8
+encoding//src/ska_attribute_polling/attribute_polling_component_manager.py=utf-8
+encoding//src/ska_attribute_polling/attribute_polling_device.py=utf-8
+encoding//src/ska_snmp_device/__init__.py=utf-8
+encoding//src/ska_snmp_device/definitions.py=utf-8
+encoding//src/ska_snmp_device/snmp_component_manager.py=utf-8
+encoding//src/ska_snmp_device/snmp_device.py=utf-8
+encoding//src/ska_snmp_device/types.py=utf-8
+encoding//tests/__init__.py=utf-8
+encoding//tests/unit/__init__.py=utf-8
+encoding//tests/unit/snmp/__init__.py=utf-8
+encoding//tests/unit/snmp/conftest.py=utf-8
+encoding//tests/unit/snmp/test_definitions.py=utf-8
+encoding//tests/unit/snmp/test_snmp_component_manager.py=utf-8
+encoding//tests/unit/snmp/test_snmp_device.py=utf-8
+encoding//tests/unit/snmp/test_version.py=utf-8

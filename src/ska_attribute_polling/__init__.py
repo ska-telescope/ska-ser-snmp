@@ -5,4 +5,6 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
-"""This subpackage contains unit tests of ska-ser-snmp-devices."""
+"""Module for ska_attribute_polling."""
+
+__version__ = "0.2.0"

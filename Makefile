@@ -1,40 +1,65 @@
-PROJECT = ska-low-itf-devices
+#
+# Project makefile for a ska-ser-snmp project. 
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 
-#### PYTHON CUSTOM VARS
-DOCS_SPHINXOPTS=-n -W --keep-going
+PROJECT = ska-ser-snmp
+include .make/base.mk
 
-# better be verbose for debugging
-PYTHON_VARS_AFTER_PYTEST ?= -v
+########################################################################
+# DOCS
+########################################################################
+include .make/docs.mk
+
+DOCS_SPHINXOPTS =-n  -W --keep-going
+
+docs-pre-build:
+	poetry config virtualenvs.create false
+	poetry install --no-root --only docs
+
+.PHONY: docs-pre-build
+
+########################################################################
+# PYTHON
+########################################################################
+include .make/python.mk
+
+PYTHON_LINE_LENGTH = 88
+PYTHON_LINT_TARGET = src tests  ## Paths containing python to be formatted and linted
+PYTHON_VARS_AFTER_PYTEST = -v --forked 
+
+PYTHON_TEST_FILE = tests
 
 # CI tests run as root; snmpsim doesn't want to run as root
 ifneq ($(CI_JOB_ID),)
 	export SKA_SNMP_DEVICE_SIMULATOR_USER = tango:tango
 endif
 
--include PrivateRules.mak
+python-pre-test:
+	echo "$(SKA_SNMP_DEVICE_SIMULATOR_USER)"
 
-include .make/base.mk
+python-post-lint:
+	mypy --config-file mypy.ini src/ tests
 
-include .make/python.mk
+.PHONY: python-pre-test python-post-lint
 
-PYTHON_LINE_LENGTH = 88
-PYTHON_VARS_AFTER_PYTEST = --forked
-
+########################################################################
+# OCI
+########################################################################
 include .make/oci.mk
 
 # Build context should be the root for all images
 OCI_IMAGE_BUILD_CONTEXT = $(PWD)
 
+########################################################################
+# HELM
+########################################################################
 include .make/helm.mk
 
+########################################################################
+# K8S
+########################################################################
 include .make/k8s.mk
 
-python-post-lint:
-	mypy src/ tests/
-
-python-pre-test:
-	echo "$(SKA_SNMP_DEVICE_SIMULATOR_USER)"
-
-### PYTHON END
-
-.PHONY: docs-pre-build python-post-lint
+-include PrivateRules.mak

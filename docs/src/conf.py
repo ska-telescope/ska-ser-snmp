@@ -21,9 +21,8 @@ def setup(app):
 
 # -- Project information -----------------------------------------------------
 
-project = 'ska-low-itf-devices'
-copyright = '2023, CSIRO'
-author = 'Malte Marquarding <malte.marquarding@csiro.au>'
+project = 'ska-ser-snmp'
+copyright = 'SKAO'
 
 # The full version, including alpha/beta/rc tags
 release = '0.2.0'
