@@ -122,6 +122,7 @@ def simulator_fixture() -> Generator[Any, None, None]:
         try:
             while sim_process.poll() is None:
                 line = sim_process.stderr.readline()
+                print(f"Simulator process output: '{line}'")
                 if line.startswith(f"  Listening at UDP/IPv4 endpoint {host}:{port}"):
                     yield host, port
                     break
