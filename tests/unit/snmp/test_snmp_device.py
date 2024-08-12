@@ -39,7 +39,7 @@ def test_int(snmp_device: DeviceProxy) -> None:
 
 def test_bits(snmp_device: DeviceProxy, simulator: Any) -> None:
     """
-    Test a bit enum (can be specific for EN6808)
+    Test a bit enum (can be specific for EN6808).
 
     :param snmp_device: the snmp device under test
     :param simulator: if simulator not defined then EN6808 hack

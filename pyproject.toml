@@ -33,7 +33,6 @@ black = "^24.2.0"
 isort = "^5.10.1"
 flake8 = "^7.0.0"
 flake8-docstrings = "^1.7.0"
-flake8-pyproject = "^1.2.3"
 mypy = "^1.3.0"
 pylint = "^2.17.2"
 pylint-junit = "^0.3.2"
@@ -61,53 +60,5 @@ sphinx-autodoc-typehints = "^1.19"
 addopts = "-v"
 log_cli = true
 log_cli_level = "DEBUG"
-
-[tool.flake8]
-docstring-style = "sphinx"
-rst-directives = "literalinclude"
-rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", "py:mod"]
-max-complexity = 10
-# E203 and W503 conflict with black
-extend-ignore = [
-    "E203",  # conflicts with black - whitespace around slice
-    "E501",  # line too long. Trust black
-    "D100",  # I'll add module docstrings if I want to
-    "D101",  # Likewise for classes
-    "D200",  # I like one line docstrings not to have to share the line with quotes
-    "D202"   # Enforces no blank line after docstring, weird when a fn starts with a comment
-]
-exclude = "tests/"
-
-[tool.mypy]
-mypy_path = "src/:tests/"
-show_error_codes = true
-strict = true
-
-[[tool.mypy.overrides]]
-module = [
-    "tango.*",
-    "pysmi.*",
-    "pyasn1.*",
-    "pysnmp.*"
-]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-allow_untyped_defs = true
-
-[tool.pylint.messages_control]
-disable = [
-    "duplicate-code"
-]
-enable = ["useless-suppression"]
-
-[tool.pylint.similarities]
-min-similarity-lines = 7
-ignore-imports = "yes"
-
-[tool.pylint.master]
-ignore = "tests"
-disable = ["C0301", "W0511", "missing-module-docstring", "missing-class-docstring"]
 
 [tool.coverage.run]

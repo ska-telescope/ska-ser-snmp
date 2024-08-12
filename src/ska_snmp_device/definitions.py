@@ -5,9 +5,7 @@
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
-"""
-Functions to handle parsing and validating device definition files.
-"""
+"""Functions to handle parsing and validating device definition files."""
 
 import itertools
 import os
@@ -54,7 +52,6 @@ def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
 
     :return: list of deserialised attribute metadata
     """
-
     # Keep this out of the loop so that we only create this thing once
     mib_builder = _create_mib_builder()
     return [
@@ -77,7 +74,6 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 
     :return: SNMP attribute information
     """
-
     # Pop off the values we're going to use in this function. The rest will
     # be used as overrides to the generated tango.server.attribute() args.
     mib_name, symbol_name, *_ = oid = tuple(attr.pop("oid"))

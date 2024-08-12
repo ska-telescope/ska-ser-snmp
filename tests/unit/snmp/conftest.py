@@ -145,10 +145,11 @@ def restore(
     dev: DeviceProxy, attr: str, setval: Any = object
 ) -> Generator[Any, None, None]:
     """
-    Restore an attribute value
+    Restore an attribute value.
 
     :param dev: tango device proxy
     :param attr: the attribute to restore its value
+    :param setval: the value to set the attribute to
 
     :yields: the old value
     """
