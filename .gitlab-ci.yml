@@ -28,3 +28,6 @@ include:
 
   - project: "ska-telescope/templates-repository"
     file: "gitlab-ci/includes/helm-chart.gitlab-ci.yml"
+
+python-test:
+  image: artefact.skao.int/ska-tango-images-pytango-builder:9.3.35
