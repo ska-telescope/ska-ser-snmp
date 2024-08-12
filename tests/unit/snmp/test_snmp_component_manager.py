@@ -23,7 +23,7 @@ def component_manager_fixture(endpoint: tuple[str, int]) -> SNMPComponentManager
     """
     Create an snmp component manager.
 
-    :param endpoint: host & port :yields: the hite rabbit device context
+    :param endpoint: host & port :yields: the SNMP device context
     :return: snmp component manager
     """
 
