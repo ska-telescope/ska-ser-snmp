@@ -45,12 +45,12 @@ class SNMPAttrInfo(AttrInfo):
 def dtype_string_to_type(dtype: str) -> typing.Callable:
     """
     Convert a string as provided as an override to an attribute's type.
-    
+
     Take the string dtype from the YAML configuration file, and returns a
     corresponding Python type or callable.
 
     :param dtype: string dtype from yaml
-    
+
     :return: callable dtype
     """
     # TODO define the full set of valid string dtypes
