@@ -5,12 +5,11 @@ It should be possible to add support for new types by only modifying
 the functions in this module.
 """
 
-from typing import Callable
 from dataclasses import dataclass
 from enum import Enum, EnumMeta, IntEnum
 from functools import reduce
 from math import ceil
-from typing import Any
+from typing import Any, Callable
 
 from pyasn1.type.base import Asn1Type
 from pyasn1.type.constraint import ConstraintsUnion, ValueRangeConstraint
