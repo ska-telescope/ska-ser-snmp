@@ -14,7 +14,11 @@ from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
 from tango import AttrWriteType
 
-from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
+from ska_snmp_device.types import (
+    SNMPAttrInfo,
+    attr_args_from_snmp_type,
+    dtype_string_to_type,
+)
 
 
 @contextmanager
@@ -63,6 +67,16 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 
     # get metadata about the SNMP object definition in the MIB
     (mib_info,) = mib_builder.importSymbols(mib_name, symbol_name)
+
+    if isinstance(attr.get("dtype"), str):
+        try:
+            attr["dtype"] = dtype_string_to_type(attr["dtype"])
+        except KeyError:
+            raise TypeError(
+                f"The string type \"{attr['dtype']}\" "
+                f"provided for attribute \"{attr['name']}\" "
+                "has no associated Python type"
+            )
 
     # Build args to be passed to tango.server.attribute()
     attr_args = {

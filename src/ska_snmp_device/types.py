@@ -5,6 +5,7 @@ It should be possible to add support for new types by only modifying
 the functions in this module.
 """
 
+import typing
 from dataclasses import dataclass
 from enum import Enum, EnumMeta, IntEnum
 from functools import reduce
@@ -27,15 +28,37 @@ class BitEnum(IntEnum):
     """This exists to let us dispatch on Enum subclass elsewhere."""
 
 
+def strbool(value: Any) -> bool:
+    return bool(int(value))
+
+
 @dataclass(frozen=True)
 class SNMPAttrInfo(AttrInfo):
     identity: tuple[str | int, ...]
 
 
+def dtype_string_to_type(dtype: str) -> typing.Callable:
+    """
+    Takes a string as provided as an override to an attribute's type
+    via a YAML configuration file, and returns a corresponding Python
+    type or callable.
+    """
+    # TODO define the full set of valid string dtypes
+    str_dtypes = {
+        "float": float,
+        "double": float,
+        "int": int,
+        "enum": int,  # should be Enum but there's a bug in tango/utils.py
+        "bool": bool,
+        "boolean": bool, # it pays homage to tango.DevBoolean
+    }
+    return str_dtypes[dtype]
+
+
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     """Coerce a PySNMP value to a PyTango-compatible Python type."""
     if isinstance(value, Integer):
-        return int(value)
+        return value
     if isinstance(value, Bits):
         return [
             attr.dtype((byte * 8) + bit)
@@ -43,6 +66,11 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
             for bit in range(8)
             if int_val & (0b10000000 >> bit)
         ]
+    if attr.dtype == bool:
+        return strbool(value)
+    if attr.dtype == int or attr.dtype == Enum:
+        if attr.attr_args.get("enum_labels"):
+            return attr.attr_args["enum_labels"][int(value)]
     if isinstance(value, OctetString):
         return str(value)
     return value
