@@ -29,6 +29,11 @@ class BitEnum(IntEnum):
 
 
 def strbool(value: Any) -> bool:
+    """
+    Convert string representation to bool.
+
+    :param value: string representation of bool
+    """
     return bool(int(value))
 
 
@@ -39,9 +44,14 @@ class SNMPAttrInfo(AttrInfo):
 
 def dtype_string_to_type(dtype: str) -> typing.Callable:
     """
-    Takes a string as provided as an override to an attribute's type
-    via a YAML configuration file, and returns a corresponding Python
-    type or callable.
+    Convert a string as provided as an override to an attribute's type.
+    
+    Take the string dtype from the YAML configuration file, and returns a
+    corresponding Python type or callable.
+
+    :param dtype: string dtype from yaml
+    
+    :return: callable dtype
     """
     # TODO define the full set of valid string dtypes
     str_dtypes = {
