@@ -5,7 +5,7 @@ It should be possible to add support for new types by only modifying
 the functions in this module.
 """
 
-import typing
+from typing import Callable
 from dataclasses import dataclass
 from enum import Enum, EnumMeta, IntEnum
 from functools import reduce
@@ -42,7 +42,7 @@ class SNMPAttrInfo(AttrInfo):
     identity: tuple[str | int, ...]
 
 
-def dtype_string_to_type(dtype: str) -> typing.Callable:
+def dtype_string_to_type(dtype: str) -> Callable[..., Any]:
     """
     Convert a string as provided as an override to an attribute's type.
 
