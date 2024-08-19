@@ -59,7 +59,6 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     useful metadata about the attribute in an SNMPAttrInfo, including
     suitable arguments to pass to tango.server.attribute().
     """
-
     # Pop off the values we're going to use in this function. The rest will
     # be used as overrides to the generated tango.server.attribute() args.
     mib_name, symbol_name, *_ = oid = tuple(attr.pop("oid"))
@@ -71,12 +70,12 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     if isinstance(attr.get("dtype"), str):
         try:
             attr["dtype"] = dtype_string_to_type(attr["dtype"])
-        except KeyError:
+        except KeyError as exc:
             raise TypeError(
                 f"The string type \"{attr['dtype']}\" "
                 f"provided for attribute \"{attr['name']}\" "
                 "has no associated Python type"
-            )
+            ) from exc
 
     # Build args to be passed to tango.server.attribute()
     attr_args = {

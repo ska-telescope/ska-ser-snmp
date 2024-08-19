@@ -78,7 +78,7 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
         ]
     if attr.dtype == bool:
         return strbool(value)
-    if attr.dtype == int or attr.dtype == Enum:
+    if attr.dtype in [int, Enum]:
         if attr.attr_args.get("enum_labels"):
             return attr.attr_args["enum_labels"][int(value)]
     if isinstance(value, OctetString):
