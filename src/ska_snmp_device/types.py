@@ -50,7 +50,7 @@ def dtype_string_to_type(dtype: str) -> typing.Callable:
         "int": int,
         "enum": int,  # should be Enum but there's a bug in tango/utils.py
         "bool": bool,
-        "boolean": bool, # it pays homage to tango.DevBoolean
+        "boolean": bool,  # it pays homage to tango.DevBoolean
     }
     return str_dtypes[dtype]
 
