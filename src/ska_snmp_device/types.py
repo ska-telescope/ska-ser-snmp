@@ -16,7 +16,7 @@ from pyasn1.type.constraint import ConstraintsUnion, ValueRangeConstraint
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, OctetString
-from tango import AttrDataFormat, DevULong64
+from tango import AttrDataFormat, DevEnum, DevULong64
 
 from ska_low_itf_devices.attribute_polling_component_manager import AttrInfo
 
@@ -57,7 +57,7 @@ def dtype_string_to_type(dtype: str) -> Callable[..., Any]:
         "float": float,
         "double": float,
         "int": int,
-        "enum": int,  # should be Enum but there's a bug in tango/utils.py
+        "enum": DevEnum,  # should be Enum but there's a bug in tango/utils.py
         "bool": bool,
         "boolean": bool,  # it pays homage to tango.DevBoolean
     }
@@ -77,9 +77,8 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
         ]
     if attr.dtype == bool:
         return strbool(value)
-    if attr.dtype in [int, Enum]:
-        if attr.attr_args.get("enum_labels"):
-            return attr.attr_args["enum_labels"][int(value)]
+    if attr.dtype == DevEnum and attr.attr_args.get("enum_labels"):
+        return attr.attr_args["enum_labels"][int(value)]
     if isinstance(value, OctetString):
         return str(value)
     return value
