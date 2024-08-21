@@ -41,7 +41,7 @@ class SNMPAttrInfo(AttrInfo):
     identity: tuple[str | int, ...]
 
 
-def dtype_string_to_type(dtype: str) -> Callable[..., Any]:
+def dtype_string_to_type(dtype: str) -> Any:
     """
     Convert a string as provided as an override to an attribute's type.
 
@@ -53,7 +53,7 @@ def dtype_string_to_type(dtype: str) -> Callable[..., Any]:
     :return: callable dtype
     """
     # TODO define the full set of valid string dtypes
-    str_dtypes = {
+    str_dtypes: dict[str, Any] = {
         "float": float,
         "double": float,
         "int": int,
