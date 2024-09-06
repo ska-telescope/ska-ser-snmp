@@ -67,7 +67,7 @@ def dtype_string_to_type(dtype: str) -> Any:
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     """Coerce a PySNMP value to a PyTango-compatible Python type."""
     if isinstance(value, Integer):
-        return value
+        return int(value)
     if isinstance(value, Bits):
         return [
             attr.dtype((byte * 8) + bit)
