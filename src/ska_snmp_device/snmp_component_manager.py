@@ -55,6 +55,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
         # Used to create our SNMP connection
         self._host = host
         self._port = port
+        self._logger = logger
         if isinstance(authority, str):
             self._access = CommunityData(authority)
         else:
@@ -102,31 +103,12 @@ class SNMPComponentManager(AttributePollingComponentManager):
             ]
             for oid, val in self._snmp_cmd(getCmd, objs):
                 attr = oid_attr_map[self._mib_symbolic(oid)]
-                pyval = snmp_to_python(attr, val)
-                value = self.override_snmp_type(attr, pyval)
-                state_updates[attr.name] = value
+                try:
+                    pyval = snmp_to_python(attr, val)
+                    state_updates[attr.name] = pyval
+                except ValueError as exc:
+                    self._logger.warn(exc)
         return state_updates
-
-    def override_snmp_type(self, attr: SNMPAttrInfo, pyval: Any) -> Any:
-        """
-        Override snmp data type if attr.dtype specified in config.
-
-        If the smnp data value is located in a module table the snmp
-        data type is usually a string. This may be problematic if you
-        require to set the attribute value with for e.g min/max value/alarm
-        Override can be achieved by adding the dtype in the configuration
-        file, but this alone does not return the correct type so we have to
-        coerce it. Basic implementation here but more types can be added
-        """
-        value = pyval
-        if isinstance(attr.dtype, str):
-            if attr.dtype in ("float", "double"):
-                value = float(pyval)
-            if attr.dtype in ("int", "enum"):
-                value = int(pyval)
-            if attr.dtype in ("boolean"):
-                value = bool(int(pyval))
-        return value
 
     def from_python(self, attr_name: str, val: Any) -> Any:
         """
