@@ -39,6 +39,8 @@ def strbool(value: Any) -> bool:
     Convert string representation to bool.
 
     :param value: string representation of bool
+
+    :return: True or  False
     """
     return bool(int(value))
 
@@ -80,6 +82,7 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     :param attr: attribute information
     :param value: data type of the attribute
 
+    :raises ValueError: conversion to Enum
     :return: the python value
     """
     if isinstance(value, Integer):
@@ -96,8 +99,7 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     if attr.dtype in [DevEnum, Integer32] and attr.attr_args.get("enum_labels"):
         if value:
             return attr.attr_args["enum_labels"][int(value)]
-        else:
-            raise ValueError(f"{attr.name} has null value. Cannot convert to enum")
+        raise ValueError(f"{attr.name} has null value. Cannot convert to enum")
     if isinstance(value, OctetString):
         return str(value)
     return value

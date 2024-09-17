@@ -33,6 +33,7 @@ def load_device_definition(filename: str) -> Any:
 
     :param filename: configuration file from telmodel or yaml file to override
 
+    :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
     logging.info(f"loading device definition file {filename}")
@@ -82,6 +83,7 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     :param mib_builder: mib builder
     :param attr: attribute
 
+    :raises TypeError: no associated Python type
     :return: SNMP attribute information
     """
     # Pop off the values we're going to use in this function. The rest will

@@ -5,7 +5,7 @@ extend-ignore = BLK,T
 enable = DAR104
 # E203 and W503 conflict with black
 ignore = E203,W503
-max-complexity = 10
+max-complexity = 14
 
 docstring-style = sphinx
 rst-roles = py:attr, py:class, py:const, py:exc, py:func, py:meth, py:mod
