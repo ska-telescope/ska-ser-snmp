@@ -19,11 +19,11 @@ from math import ceil
 from typing import Any
 
 from pyasn1.type.base import Asn1Type
-from pyasn1.type.constraint import ValueRangeConstraint
+from pyasn1.type.constraint import ConstraintsUnion, ValueRangeConstraint
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
-from pysnmp.proto.rfc1902 import Bits, OctetString
-from tango import AttrDataFormat, DevULong64
+from pysnmp.proto.rfc1902 import Bits, Integer32, OctetString
+from tango import AttrDataFormat, DevEnum, DevULong64
 
 from ska_attribute_polling.attribute_polling_component_manager import AttrInfo
 
@@ -34,11 +34,43 @@ class BitEnum(IntEnum):
     """This exists to let us dispatch on Enum subclass elsewhere."""
 
 
+def strbool(value: Any) -> bool:
+    """
+    Convert string representation to bool.
+
+    :param value: string representation of bool
+    """
+    return bool(int(value))
+
+
 @dataclass(frozen=True)
 class SNMPAttrInfo(AttrInfo):
     """Helper class to hold attribute information."""
 
     identity: tuple[str | int, ...]
+
+
+def dtype_string_to_type(dtype: str) -> Any:
+    """
+    Convert a string as provided as an override to an attribute's type.
+
+    Take the string dtype from the YAML configuration file, and returns a
+    corresponding Python type or callable.
+
+    :param dtype: string dtype from yaml
+
+    :return: callable dtype
+    """
+    # TODO define the full set of valid string dtypes
+    str_dtypes: dict[str, Any] = {
+        "float": float,
+        "double": float,
+        "int": int,
+        "enum": DevEnum,
+        "bool": bool,
+        "boolean": bool,  # it pays homage to tango.DevBoolean
+    }
+    return str_dtypes[dtype]
 
 
 def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
@@ -51,7 +83,7 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     :return: the python value
     """
     if isinstance(value, Integer):
-        return int(value)
+        return value if attr.dtype == DevEnum else int(value)
     if isinstance(value, Bits):
         return [
             attr.dtype((byte * 8) + bit)
@@ -59,6 +91,13 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
             for bit in range(8)
             if int_val & (0b10000000 >> bit)
         ]
+    if attr.dtype == bool:
+        return strbool(value)
+    if attr.dtype in [DevEnum, Integer32] and attr.attr_args.get("enum_labels"):
+        if value:
+            return attr.attr_args["enum_labels"][int(value)]
+        else:
+            raise ValueError(f"{attr.name} has null value. Cannot convert to enum")
     if isinstance(value, OctetString):
         return str(value)
     return value
@@ -93,6 +132,7 @@ def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
     return value
 
 
+# pylint: disable=too-many-nested-blocks, too-many-branches
 def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
     """
     Given an SNMP type, return kwargs to be passed to tango.server.attribute().
@@ -136,20 +176,27 @@ def attr_args_from_snmp_type(snmp_type: Asn1Type) -> dict[str, Any]:
             # Different flavours of integer then add a ValueRangeConstraint, and SNMP
             # objects can then apply their own range constraints. If we calculate the
             # intersection of these ranges, we can pass min and max values to Tango.
-            if all(isinstance(x, ValueRangeConstraint) for x in snmp_type.subtypeSpec):
-                ranges = ((r.start, r.stop) for r in snmp_type.subtypeSpec)
-                start, stop = reduce(_range_intersection, ranges)
-                attr_args.update(
-                    min_value=start,
-                    max_value=stop,
-                )
-                # Stop-gap to support Counter64. Perhaps we should always
-                # specify the smallest compatible Tango int type?
-                if stop >= 2**63:
-                    attr_args["dtype"] = DevULong64
-                    if stop == 2**64 - 1:
-                        del attr_args["max_value"]
-
+            range_constraints = []
+            for constraint in snmp_type.subtypeSpec:
+                if isinstance(constraint, ValueRangeConstraint):
+                    range_constraints.append(constraint)
+                if isinstance(constraint, ConstraintsUnion):
+                    for sub_constraint in constraint:
+                        if isinstance(sub_constraint, ValueRangeConstraint):
+                            range_constraints.append(sub_constraint)
+            ranges = ((r.start, r.stop) for r in range_constraints)
+            start, stop = reduce(_range_intersection, ranges)
+            attr_args.update(
+                min_value=start,
+                max_value=stop,
+            )
+            # https://gitlab.com/tango-controls/cppTango/-/issues/1132
+            # Stop-gap to support Counter64. Perhaps we should always
+            # specify the smallest compatible Tango int type?
+            if stop.bit_length() > 63:
+                attr_args["dtype"] = DevULong64
+                if (stop + 1).bit_length() == 65:
+                    del attr_args["max_value"]
     return attr_args
 
 

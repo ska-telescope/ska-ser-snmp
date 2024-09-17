@@ -8,26 +8,23 @@
 """Functions to handle parsing and validating device definition files."""
 
 import itertools
+import logging
 import os
 import string
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Generator
 
 import yaml
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
+from ska_telmodel.data import TMData
 from tango import AttrWriteType
 
-from ska_snmp_device.types import SNMPAttrInfo, attr_args_from_snmp_type
-
-
-@contextmanager
-def _chdir(to_dir: os.PathLike[Any]) -> Generator[None, None, None]:
-    old_dir = os.getcwd()
-    os.chdir(to_dir)
-    yield
-    os.chdir(old_dir)
+from ska_snmp_device.types import (
+    SNMPAttrInfo,
+    attr_args_from_snmp_type,
+    dtype_string_to_type,
+)
 
 
 def load_device_definition(filename: str) -> Any:
@@ -38,10 +35,23 @@ def load_device_definition(filename: str) -> Any:
 
     :return: the configuration dictionary
     """
-    with _chdir(Path(__file__).parent / "device_library"):
-        with open(filename, encoding="utf-8") as def_file:
-            # noqa: T101 TODO: here would be a good place for some schema validation
-            return yaml.safe_load(def_file)
+    logging.info(f"loading device definition file {filename}")
+    tmdata = TMData()
+    try:
+        return tmdata[filename].get_dict()
+    # pylint: disable=broad-exception-caught
+    except Exception:
+        logging.warning(f"{filename} is not an SKA_TelModel configuration")
+        try:
+            path = Path(filename).resolve()
+            logging.info(f"directory {os.getcwd()}")
+            logging.info(f"loading yaml file {path}")
+            with open(path, encoding="utf-8") as def_file:
+                logging.info(f"loading yaml file {path}")
+                return yaml.safe_load(def_file)
+        except Exception as ex:
+            logging.error(f"No configuration file {filename} to load")
+            raise ex
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
@@ -81,6 +91,16 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
 
     # get metadata about the SNMP object definition in the MIB
     (mib_info,) = mib_builder.importSymbols(mib_name, symbol_name)
+
+    if isinstance(attr.get("dtype"), str):
+        try:
+            attr["dtype"] = dtype_string_to_type(attr["dtype"])
+        except KeyError as exc:
+            raise TypeError(
+                f"The string type \"{attr['dtype']}\" "
+                f"provided for attribute \"{attr['name']}\" "
+                "has no associated Python type"
+            ) from exc
 
     # Build args to be passed to tango.server.attribute()
     attr_args = {
@@ -136,6 +156,13 @@ def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
     of the cartesian product of the provided ranges. The "name" field
     of each attribute will be formatted with name.format(i1, ..., iN).
 
+    Additionally "indexes" may have an increment to allow for equally spaced
+    non sequential oid's [a, b, c] where b = a + (N-1)c. In this case it may also
+    be desireable for the name to run sequentially. Therefore 2 additional specifiers
+    have been added "start_index" and  "placeholder_index" from which the
+    names formating placeholder_index is substituted which the new starting index
+    (i1 ..., placeholder_index, ... iN)
+
     If "indexes" is not present, attr will be yielded unmodified. This
     function also performs some validation on the attribute definition.
 
@@ -146,6 +173,8 @@ def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
     :yields: copies of the attribute
     """
     suffix = attr["oid"][2:]
+    start_index = attr.pop("start_index", None)
+    placeholder_index = attr.pop("placeholder_index", 0)
     indexes = attr.pop("indexes", [])
     name = attr["name"]
 
@@ -169,14 +198,22 @@ def _expand_attribute(attr: Any) -> Generator[Any, None, None]:
                 " - use 0 for a scalar object"
             )
 
-    index_ranges = (range(a, b + 1) for a, b in indexes)
+    index_ranges = (
+        (range(v[0], v[1] + v[2], v[2])) if len(v) > 2 else (range(v[0], v[1] + 1))
+        for v in indexes
+    )
     for element in itertools.product(*([i] for i in suffix), *index_ranges):
         index_vars = element[len(suffix) :]  # black wants this space T_T
-        formatted_name = name.format(*index_vars)
+        index_vars_list = list(index_vars)
+        if start_index is not None:
+            index_vars_list[placeholder_index] = start_index
+            start_index += 1
+        formatted_name = name.format(*index_vars_list)
         if not formatted_name.isidentifier():
             raise ValueError(
                 f'Attribute name "{formatted_name}" is not a valid Python identifier'
             )
+
         yield {
             **attr,
             "name": formatted_name,

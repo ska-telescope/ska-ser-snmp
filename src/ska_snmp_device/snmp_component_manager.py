@@ -40,7 +40,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
             ContextData,
             ObjectType,
         ],
-        Iterable,
+        Iterable[tuple[ErrorIndication, str, int, Iterable[ObjectType]]],
     ]
 
     def __init__(  # noqa: D107
@@ -67,6 +67,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
         # Used to create our SNMP connection
         self._host = host
         self._port = port
+        self._logger = logger
         if isinstance(authority, str):
             self._access = CommunityData(authority)
         else:
@@ -117,8 +118,11 @@ class SNMPComponentManager(AttributePollingComponentManager):
             ]
             for oid, val in self._snmp_cmd(getCmd, objs):
                 attr = oid_attr_map[self._mib_symbolic(oid)]
-                state_updates[attr.name] = snmp_to_python(attr, val)
-
+                try:
+                    pyval = snmp_to_python(attr, val)
+                    state_updates[attr.name] = pyval
+                except ValueError as exc:
+                    self._logger.warn(exc)
         return state_updates
 
     def from_python(self, attr_name: str, val: Any) -> Any:
