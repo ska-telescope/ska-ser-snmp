@@ -1422,20 +1422,19 @@ reference = "PyPI-public"
 
 [[package]]
 name = "pysnmp-lextudio"
-version = "6.2.1"
-description = "A Python library for SNMP"
+version = "5.0.34"
+description = ""
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = ">=3.7,<4.0"
 files = [
-    {file = "pysnmp_lextudio-6.2.1-py3-none-any.whl", hash = "sha256:69a8f8650e7f0cdf76e9cdee8d464787fa6e5df79f0d6f004fa8b935f0767a45"},
-    {file = "pysnmp_lextudio-6.2.1.tar.gz", hash = "sha256:e54e0ec93ff0b68e511502f9fa5f3704e07fc89e6f7bed489973bde8378b2557"},
+    {file = "pysnmp_lextudio-5.0.34-py3-none-any.whl", hash = "sha256:c9bc405d9048b6a2017a4db395646c8cab9f2bb4e9a84d08aaf1ad7310ef7a9a"},
+    {file = "pysnmp_lextudio-5.0.34.tar.gz", hash = "sha256:cbb8963e4639fb3800fa40cea118dfec234de433509cbb878f7f42bad51b07c3"},
 ]
 
 [package.dependencies]
 pyasn1 = ">=0.4.8,<0.5.0 || >0.5.0"
-pysmi-lextudio = ">=1.3.0,<2.0.0"
+pysmi-lextudio = ">=1.0.4,<2.0.0"
 pysnmpcrypto = ">=0.0.4,<0.0.5"
-pytest-cov = ">=4.0.0,<5.0.0"
 
 [package.source]
 type = "legacy"
@@ -2062,17 +2061,17 @@ reference = "ska-nexus"
 
 [[package]]
 name = "snmpsim-lextudio"
-version = "1.1.1"
+version = "1.0.6"
 description = "SNMP Simulator is a tool that acts as multitude of SNMP Agents built into real physical devices, from SNMP Manager's point of view. Simulator builds and uses a database of physical devices' SNMP footprints to respond like their original counterparts do."
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = ">=3.7,<4.0"
 files = [
-    {file = "snmpsim_lextudio-1.1.1-py3-none-any.whl", hash = "sha256:a5288a59219789c8831aafe3dcb41f79f918215b870a25579ff2c5a713048a2f"},
-    {file = "snmpsim_lextudio-1.1.1.tar.gz", hash = "sha256:55d71a27de878b6c4338e363d6f6a989cad0ae7f265ac187d6c617feb7ea840a"},
+    {file = "snmpsim_lextudio-1.0.6-py3-none-any.whl", hash = "sha256:83c80026a9c8c21ce7a49400525dcdd6757b8502482282bc177127f19662509f"},
+    {file = "snmpsim_lextudio-1.0.6.tar.gz", hash = "sha256:a710a26776bda6fe21c2a252497759878fdb6ec103f50d17f81062c942c9737a"},
 ]
 
 [package.dependencies]
-pysnmp-lextudio = ">=6.1.0,<7.0.0"
+pysnmp-lextudio = ">=5.0.0,<6.0.0"
 
 [package.source]
 type = "legacy"
@@ -2553,4 +2552,4 @@ reference = "PyPI-public"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "d473886bcb906232ff80fa967b38f6bba81a7abfd6c38184375289bde0ac83e1"
+content-hash = "196e94e192e37cf6a5a3dfeab4ae8ce0859c4744f923c5d1e099c385f3453f23"
