@@ -94,7 +94,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-    "sphinxcontrib.plantuml",
+#    "sphinxcontrib.plantuml",
 ]
 autoclass_content = "class"
 plantuml_syntax_error_image = True
