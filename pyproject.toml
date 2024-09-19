@@ -25,6 +25,7 @@ python = "~3.10"
 pytango = "^9.5.0"
 PyYAML = "^6.0.1"
 ska-tango-base = "^1.0.0"
+ska-control-model = "^1.0.0"
 pysnmp-lextudio = "5.0.27"
 more-itertools = "^10.2.0"
 
