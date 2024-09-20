@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Generator, Iterable, Mapping, Sequence
+from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Union
 
 from more_itertools import chunked
 from pysnmp.entity.engine import SnmpEngine
@@ -35,7 +35,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
     SNMPCmdFn = Callable[
         [
             SnmpEngine,
-            CommunityData | UsmUserData,
+            Union[CommunityData, UsmUserData],
             UdpTransportTarget,
             ContextData,
             ObjectType,

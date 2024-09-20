@@ -49,6 +49,8 @@ autodoc_mock_imports = [
     "tango",
     "ska_control_model",
     "ska_ser_logging",
+    "pysnmp",
+    "pyasn1",
 ]
 
 
