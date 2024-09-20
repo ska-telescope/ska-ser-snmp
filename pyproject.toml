@@ -67,6 +67,7 @@ typing-extensions = "^4.7.1"
 annotated-types = "^0.6.0"
 PyYAML = "^6.0.1"
 pydantic-core = "^2.18.1"
+more-itertools = "^10.5.0"
 ska-telmodel = "^1.4.1"
 
 [tool.pytest.ini_options]
