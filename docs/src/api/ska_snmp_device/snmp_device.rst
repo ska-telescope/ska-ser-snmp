@@ -2,5 +2,5 @@
 SNMP Device
 ===========
 
-.. automodule:: ska_snmp_device.smnp_device
+.. automodule:: ska_snmp_device.snmp_device
    :members:

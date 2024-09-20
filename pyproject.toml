@@ -59,13 +59,14 @@ optional = true
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^6.2.1"
-PyYAML = "^6.0.1"
-sphinx-rtd-theme = "^1.0"
+ska-ser-sphinx-theme = "^0.2.0"
+sphinx-rtd-theme = "^2.0.0"
 sphinx-autodoc-typehints = "^1.23.0"
 sphinxcontrib-plantuml = "^0.25"
-pydantic-core = "^2.18.1"
-annotated-types = "^0.6.0"
 typing-extensions = "^4.7.1"
+annotated-types = "^0.6.0"
+PyYAML = "^6.0.1"
+pydantic-core = "^2.18.1"
 ska-telmodel = "^1.4.1"
 
 [tool.pytest.ini_options]

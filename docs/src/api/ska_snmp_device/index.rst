@@ -7,4 +7,3 @@ SNMP Device subpackage
 
   SNMP device<snmp_device>
   SNMP component manager<snmp_component_manager>
- 
