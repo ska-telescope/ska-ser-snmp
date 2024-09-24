@@ -34,7 +34,7 @@ class BitEnum(IntEnum):
     """This exists to let us dispatch on Enum subclass elsewhere."""
 
 
-def strbool(value: Any) -> bool:
+def strbool(value: Asn1Type) -> bool:
     """
     Convert Asn1Type string representation to bool.
 
