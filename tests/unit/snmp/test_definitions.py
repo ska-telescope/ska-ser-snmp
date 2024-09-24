@@ -93,6 +93,37 @@ def test_expand_attribute_nested() -> None:
     assert expected == list(_expand_attribute(template))
 
 
+def test_expand_attribute_wr16() -> None:
+    """Test loading non-sequential indexd attributes."""
+    template = yaml.safe_load(
+        """
+    name: net_wr{1}_status
+    oid: [MY-MIB, wrzParamValue]
+    start_index: 0
+    placeholder_index: 1
+    indexes:
+      - [4, 4]
+      - [2010, 2310, 100]
+      - [5, 5]
+    """
+    )
+
+    expected = yaml.safe_load(
+        """
+    - name: net_wr0_status
+      oid: [MY-MIB, wrzParamValue, 4, 2010, 5]
+    - name: net_wr1_status
+      oid: [MY-MIB, wrzParamValue, 4, 2110, 5]
+    - name: net_wr2_status
+      oid: [MY-MIB, wrzParamValue, 4, 2210, 5]
+    - name: net_wr3_status
+      oid: [MY-MIB, wrzParamValue, 4, 2310, 5]
+    """
+    )
+
+    assert expected == list(_expand_attribute(template))
+
+
 def test_expand_attribute_missing_suffix() -> None:
     """Test loading an attribute with malformed oid definition."""
     template = yaml.safe_load(
