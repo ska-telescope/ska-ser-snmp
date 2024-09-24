@@ -36,7 +36,7 @@ class BitEnum(IntEnum):
 
 def strbool(value: Any) -> bool:
     """
-    Convert string representation to bool.
+    Convert Asn1Type string representation to bool.
 
     :param value: string representation of bool
 

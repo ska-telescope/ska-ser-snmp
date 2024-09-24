@@ -17,7 +17,6 @@ from typing import Any, Generator
 import yaml
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
-from ska_telmodel.data import TMData
 from tango import AttrWriteType
 
 from ska_snmp_device.types import (
@@ -31,28 +30,22 @@ def load_device_definition(filename: str) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
 
-    :param filename: configuration file from telmodel or yaml file to override
+    :param filename: configuration file yaml file
 
     :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
     logging.info(f"loading device definition file {filename}")
-    tmdata = TMData()
     try:
-        return tmdata[filename].get_dict()
-    # pylint: disable=broad-exception-caught
-    except Exception:
-        logging.warning(f"{filename} is not an SKA_TelModel configuration")
-        try:
-            path = Path(filename).resolve()
-            logging.info(f"directory {os.getcwd()}")
+        path = Path(filename).resolve()
+        logging.info(f"directory {os.getcwd()}")
+        logging.info(f"loading yaml file {path}")
+        with open(path, encoding="utf-8") as def_file:
             logging.info(f"loading yaml file {path}")
-            with open(path, encoding="utf-8") as def_file:
-                logging.info(f"loading yaml file {path}")
-                return yaml.safe_load(def_file)
-        except Exception as ex:
-            logging.error(f"No configuration file {filename} to load")
-            raise ex
+            return yaml.safe_load(def_file)
+    except Exception as ex:
+        logging.error(f"No configuration file {filename} to load")
+        raise ex
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:

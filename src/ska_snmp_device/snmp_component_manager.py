@@ -122,7 +122,9 @@ class SNMPComponentManager(AttributePollingComponentManager):
                     pyval = snmp_to_python(attr, val)
                     state_updates[attr.name] = pyval
                 except ValueError as exc:
-                    self._logger.warn(exc)
+                    self._logger.warn(
+                        f"Couldn't convert {attr} value {val} due to {exc}"
+                    )
         return state_updates
 
     def from_python(self, attr_name: str, val: Any) -> Any:
