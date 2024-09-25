@@ -22,13 +22,15 @@ url = 'https://pypi.org/simple'
 
 [tool.poetry.dependencies]
 python = "~3.10"  
-pytango = "^9.4.2"
-PyYAML = "^6.0"
+pytango = "^9.5.0"
+PyYAML = "^6.0.1"
 ska-tango-base = "^1.0.0"
-pysnmp-lextudio = "^5.0.27"
-more-itertools = "^10.1.0"
+ska-control-model = "^1.0.0"
+pysnmp-lextudio = "5.0.27"
+more-itertools = "^10.2.0"
 
 [tool.poetry.group.dev.dependencies]
+attrs = "^23.2.0"
 black = "^24.2.0"
 isort = "^5.10.1"
 flake8 = "^7.0.0"
@@ -36,25 +38,36 @@ flake8-docstrings = "^1.7.0"
 mypy = "^1.3.0"
 pylint = "^2.17.2"
 pylint-junit = "^0.3.2"
-pytest = "^7.1.3"
+pytest = "^7.3.1"
 pytest-cov = "^4.0.0"
 pytest-forked = "^1.4.0"
 pytest-json-report = "^1.5.0"
 pytest-timeout = "^2.1.0"
 toml = "^0.10.2"
 pycodestyle = "^2.9.1"
+referencing = "^0.35.1"
+ska-ser-devices ="^0.2.0"
 ska-tango-testing = "^0.4.0"
-snmpsim-lextudio = "^1.0.1"
-types-pyyaml = "^6.0.12.10"
+snmpsim-lextudio = "^1.0.6"
+types-pyyaml = "^6.0.12.12"
+rpds-py = "^0.13.1"
+jsonschema_specifications = "^2023.12.1"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^5.2"
-PyYAML = "^6.0"
-sphinx-rtd-theme = "^1.0"
-sphinx-autodoc-typehints = "^1.19"
+Sphinx = "^7.4.7"
+ska-ser-sphinx-theme = "^0.2.0"
+sphinx-rtd-theme = "^2.1.0rc2"
+sphinx-autodoc-typehints = "^2.3.0"
+sphinxcontrib-plantuml = "^0.25"
+typing-extensions = "^4.12.2"
+annotated-types = "^0.7.0"
+PyYAML = "^6.0.1"
+pydantic-core = "^2.23.4"
+more-itertools = "^10.5.0"
+ska-telmodel = "^1.4.1"
 
 [tool.pytest.ini_options]
 addopts = "-v"

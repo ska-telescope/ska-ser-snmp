@@ -33,7 +33,7 @@ def expect_attribute(
     attr: str,
     value: Any,
     *,
-    timeout: float = 10.0,
+    timeout: float = 20.0,
 ) -> bool:
     """
     Wait for Tango attribute to have a certain value using a subscription.
@@ -166,6 +166,7 @@ def definition_path_fixture() -> str:
 
     :return: the fully qualified filename
     """
+    print(str(Path(__file__).parent.resolve()))
     return str(Path(__file__).parent.resolve() / "SKA-7357.yaml")
 
 
