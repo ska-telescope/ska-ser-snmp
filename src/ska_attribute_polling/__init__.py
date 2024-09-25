@@ -7,4 +7,4 @@
 # See LICENSE for more info.
 """Module for ska_attribute_polling."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

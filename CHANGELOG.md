@@ -2,6 +2,10 @@
 
 ## unreleased
 
+## 0.3.0
+MCCS-2261 update
+MCCS-2181 Investigate re-homing SNMP devices
+
 ## 0.2.0
 
 * LOW-529: Upgrade to PyTango 9.4.2
