@@ -1,4 +1,4 @@
-Z16-SEVEN-PRODUCT-MIB-5.2 DEFINITIONS ::= BEGIN
+Z16-SEVEN-PRODUCT-MIB-5-2 DEFINITIONS ::= BEGIN
 
 -- During development all unused/not implemented objects are commented out
 -- to avoid later changes
