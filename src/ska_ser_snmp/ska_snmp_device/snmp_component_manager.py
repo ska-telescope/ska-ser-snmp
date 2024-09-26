@@ -19,12 +19,12 @@ from pysnmp.proto.errind import ErrorIndication
 from pysnmp.smi.rfc1902 import ObjectIdentity, ObjectType
 from ska_tango_base.base import CommunicationStatusCallbackType
 
-from ska_attribute_polling.attribute_polling_component_manager import (
+from ska_ser_snmp.ska_attribute_polling.attribute_polling_component_manager import (
     AttributePollingComponentManager,
     AttrPollRequest,
     AttrPollResponse,
 )
-from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
+from ska_ser_snmp.ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
 
 class SNMPComponentManager(AttributePollingComponentManager):

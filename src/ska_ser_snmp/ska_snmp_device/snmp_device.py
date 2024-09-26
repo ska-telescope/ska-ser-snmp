@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from tango.server import device_property
 
-from ska_attribute_polling.attribute_polling_device import AttributePollingDevice
-from ska_snmp_device.definitions import load_device_definition, parse_device_definition
-from ska_snmp_device.snmp_component_manager import SNMPComponentManager
+from ska_ser_snmp.ska_attribute_polling.attribute_polling_device import AttributePollingDevice
+from ska_ser_snmp.ska_snmp_device.definitions import load_device_definition, parse_device_definition
+from ska_ser_snmp.ska_snmp_device.snmp_component_manager import SNMPComponentManager
 
 
 class SNMPDevice(AttributePollingDevice):

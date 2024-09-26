@@ -20,7 +20,7 @@ from pysnmp.smi.compiler import addMibCompiler
 from ska_telmodel.data import TMData
 from tango import AttrWriteType
 
-from ska_snmp_device.types import (
+from ska_ser_snmp.ska_snmp_device.types import (
     SNMPAttrInfo,
     attr_args_from_snmp_type,
     dtype_string_to_type,

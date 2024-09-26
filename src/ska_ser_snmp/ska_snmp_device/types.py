@@ -25,7 +25,7 @@ from pyasn1.type.univ import Integer
 from pysnmp.proto.rfc1902 import Bits, Integer32, OctetString
 from tango import AttrDataFormat, DevEnum, DevULong64
 
-from ska_attribute_polling.attribute_polling_component_manager import AttrInfo
+from ska_ser_snmp.ska_attribute_polling.attribute_polling_component_manager import AttrInfo
 
 _SNMP_ENUM_INVALID_PREFIX = "_SNMPEnum_INVALID_"
 

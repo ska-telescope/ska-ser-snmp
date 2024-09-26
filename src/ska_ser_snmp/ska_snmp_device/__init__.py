@@ -9,6 +9,13 @@
 
 __version__ = "0.2.0"
 
-__all__ = ["SNMPDevice"]
+__all__ = [
+    "SNMPDevice",
+    "SNMPComponentManager",
+    "SNMPAttrInfo",
+    "attr_args_from_snmp_type",
+]
 
 from .snmp_device import SNMPDevice
+from .snmp_component_manager import SNMPComponentManager
+from .types import SNMPAttrInfo, attr_args_from_snmp_type
