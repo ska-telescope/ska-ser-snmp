@@ -103,6 +103,8 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
             value = int(value)
         elif isinstance(value, OctetString):
             value = str(value)
+        else:
+            raise ValueError("Cannot convert unsupported type {type(value)}")
         return value
     except ValueError as exc:
         raise ValueError(
