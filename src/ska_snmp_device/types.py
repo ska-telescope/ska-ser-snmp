@@ -105,7 +105,9 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
             value = str(value)
         return value
     except ValueError as exc:
-        raise ValueError(f"{attr.name} cannot convert to '{value}' to {attr.dtype}")
+        raise ValueError(
+            f"{attr.name} cannot convert to '{value}' to {attr.dtype}"
+        ) from exc
 
 
 def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
