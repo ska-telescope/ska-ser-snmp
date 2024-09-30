@@ -22,7 +22,7 @@ from pyasn1.type.base import Asn1Type
 from pyasn1.type.constraint import ConstraintsUnion, ValueRangeConstraint
 from pyasn1.type.namedval import NamedValues
 from pyasn1.type.univ import Integer
-from pysnmp.proto.rfc1902 import Bits, Integer32, OctetString
+from pysnmp.proto.rfc1902 import Bits, OctetString
 from tango import AttrDataFormat, DevEnum, DevULong64
 
 from ska_attribute_polling.attribute_polling_component_manager import AttrInfo
@@ -85,24 +85,31 @@ def snmp_to_python(attr: SNMPAttrInfo, value: Asn1Type) -> Any:
     :raises ValueError: conversion to Enum
     :return: the python value
     """
-    if isinstance(value, Integer):
-        return value if attr.dtype == DevEnum else int(value)
-    if isinstance(value, Bits):
-        return [
-            attr.dtype((byte * 8) + bit)
-            for byte, int_val in enumerate(bytes(value))
-            for bit in range(8)
-            if int_val & (0b10000000 >> bit)
-        ]
-    if attr.dtype == bool:
-        return strbool(value)
-    if attr.dtype in [DevEnum, Integer32] and attr.attr_args.get("enum_labels"):
-        if value:
-            return attr.attr_args["enum_labels"][int(value)]
-        raise ValueError(f"{attr.name} has null value. Cannot convert to enum")
-    if isinstance(value, OctetString):
-        return str(value)
-    return value
+    try:
+        if isinstance(value, Integer) or attr.dtype == int:
+            value = int(value)
+        elif isinstance(value, Bits):
+            value = [
+                attr.dtype((byte * 8) + bit)
+                for byte, int_val in enumerate(bytes(value))
+                for bit in range(8)
+                if int_val & (0b10000000 >> bit)
+            ]
+        elif attr.dtype == bool:
+            value = strbool(value)
+        elif attr.dtype == float:
+            value = float(value)
+        elif attr.dtype == DevEnum and attr.attr_args.get("enum_labels"):
+            value = int(value)
+        elif isinstance(value, OctetString):
+            value = str(value)
+        else:
+            raise ValueError(f"Cannot convert unsupported type {type(value)}")
+        return value
+    except ValueError as exc:
+        raise ValueError(
+            f"{attr.name} cannot convert to '{value}' to {attr.dtype}"
+        ) from exc
 
 
 def python_to_snmp(attr: SNMPAttrInfo, value: Any) -> Any:
