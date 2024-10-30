@@ -12,7 +12,7 @@ import logging
 import os
 import string
 from pathlib import Path
-from typing import Any, Generator, Optional
+from typing import Any, Generator
 
 import yaml
 from pysnmp.smi.builder import MibBuilder
@@ -27,7 +27,7 @@ from ska_snmp_device.types import (
 )
 
 
-def load_device_definition(filename: str, repo: Optional[str]) -> Any:
+def load_device_definition(filename: str, repo: str | None) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
 
