@@ -37,13 +37,12 @@ def load_device_definition(filename: str, repo: Optional[str]) -> Any:
     :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
-    if repo is not None:
+    if repo is not None and repo != "":
         try:
             logging.info(f"attempting to load device definition from repo {repo}")
-            tmdata = TMData(
-                [repo]
-            )
+            tmdata = TMData([repo])
             return tmdata[filename].get_dict()
+        # pylint: disable=broad-exception-caught
         except Exception:
             logging.warning(f"{repo} {filename} is not an SKA_TelModel configuration")
     try:
@@ -57,9 +56,6 @@ def load_device_definition(filename: str, repo: Optional[str]) -> Any:
     except Exception as ex:
         logging.error(f"No configuration file {filename} to load")
         raise ex
-    # pylint: disable=broad-exception-caught
-
-
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:

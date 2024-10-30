@@ -23,7 +23,7 @@ def test_parse_definition_regression(definition_path: str) -> None:
 
     :param definition_path: localtion of the yaml file
     """
-    definition = load_device_definition(definition_path)
+    definition = load_device_definition(definition_path, "")
     attributes = parse_device_definition(definition)
     # TODO compare this properly to a baseline
     assert len(attributes) == 9
