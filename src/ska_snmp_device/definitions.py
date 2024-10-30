@@ -37,7 +37,7 @@ def load_device_definition(filename: str, repo: str | None) -> Any:
     :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
-    if repo is not None and repo != "":
+    if not repo:
         try:
             logging.info(f"attempting to load device definition from repo {repo}")
             tmdata = TMData([repo])
