@@ -12,7 +12,7 @@ import logging
 import os
 import string
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 
 import yaml
 from pysnmp.smi.builder import MibBuilder
@@ -27,32 +27,39 @@ from ska_snmp_device.types import (
 )
 
 
-def load_device_definition(filename: str) -> Any:
+def load_device_definition(filename: str, repo: Optional[str]) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
 
     :param filename: configuration file yaml file
+    :param repo: the telmodel repo that we're pulling from
 
     :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
-    logging.info(f"loading device definition file {filename}")
-    tmdata = TMData()
-    try:
-        return tmdata[filename].get_dict()
-    # pylint: disable=broad-exception-caught
-    except Exception:
-        logging.warning(f"{filename} is not an SKA_TelModel configuration")
+    if repo is not None:
         try:
-            path = Path(filename).resolve()
-            logging.info(f"directory {os.getcwd()}")
+            logging.info(f"attempting to load device definition from repo {repo}")
+            tmdata = TMData(
+                [repo]
+            )
+            return tmdata[filename].get_dict()
+        except Exception:
+            logging.warning(f"{repo} {filename} is not an SKA_TelModel configuration")
+    try:
+        logging.info(f"attempting to load device definition from {filename}")
+        path = Path(filename).resolve()
+        logging.info(f"directory {os.getcwd()}")
+        logging.info(f"loading yaml file {path}")
+        with open(path, encoding="utf-8") as def_file:
             logging.info(f"loading yaml file {path}")
-            with open(path, encoding="utf-8") as def_file:
-                logging.info(f"loading yaml file {path}")
-                return yaml.safe_load(def_file)
-        except Exception as ex:
-            logging.error(f"No configuration file {filename} to load")
-            raise ex
+            return yaml.safe_load(def_file)
+    except Exception as ex:
+        logging.error(f"No configuration file {filename} to load")
+        raise ex
+    # pylint: disable=broad-exception-caught
+
+
 
 
 def parse_device_definition(definition: dict[str, Any]) -> list[SNMPAttrInfo]:
