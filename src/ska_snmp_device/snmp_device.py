@@ -19,6 +19,7 @@ class SNMPDevice(AttributePollingDevice):
     """An implementation of a generic snmp Tango device."""
 
     DeviceDefinition = device_property(dtype=str, mandatory=True)
+    TelmodelRepo = device_property(dtype=str, default_value="")
     Host = device_property(dtype=str, mandatory=True)
     Port = device_property(dtype=int, default_value=161)
     V2Community = device_property(dtype=str)
@@ -36,7 +37,7 @@ class SNMPDevice(AttributePollingDevice):
         # This goes here because you don't have access to properties
         # until tango.server.BaseDevice.init_device() has been called
         dynamic_attrs = parse_device_definition(
-            load_device_definition(self.DeviceDefinition)
+            load_device_definition(self.DeviceDefinition, self.TelmodelRepo)
         )
 
         self._dynamic_attrs = {attr.name: attr for attr in dynamic_attrs}

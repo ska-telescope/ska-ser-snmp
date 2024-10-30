@@ -17,6 +17,7 @@ from typing import Any, Generator
 import yaml
 from pysnmp.smi.builder import MibBuilder
 from pysnmp.smi.compiler import addMibCompiler
+from ska_telmodel.data import TMData
 from tango import AttrWriteType
 
 from ska_snmp_device.types import (
@@ -26,17 +27,26 @@ from ska_snmp_device.types import (
 )
 
 
-def load_device_definition(filename: str) -> Any:
+def load_device_definition(filename: str, repo: str | None) -> Any:
     """
     Return the parsed contents of the YAML file at filename.
 
     :param filename: configuration file yaml file
+    :param repo: the telmodel repo that we're pulling from
 
     :raises Exception: no configuration file found
     :return: the configuration dictionary
     """
-    logging.info(f"loading device definition file {filename}")
+    if not repo:
+        try:
+            logging.info(f"attempting to load device definition from repo {repo}")
+            tmdata = TMData([repo])
+            return tmdata[filename].get_dict()
+        # pylint: disable=broad-exception-caught
+        except Exception:
+            logging.warning(f"{repo} {filename} is not an SKA_TelModel configuration")
     try:
+        logging.info(f"attempting to load device definition from {filename}")
         path = Path(filename).resolve()
         logging.info(f"directory {os.getcwd()}")
         logging.info(f"loading yaml file {path}")
