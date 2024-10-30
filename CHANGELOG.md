@@ -2,6 +2,9 @@
 
 ## unreleased
 
+## 0.3.2
+MCCS-2313 read yaml file from telmodel
+
 ## 0.3.0
 MCCS-2261 update
 MCCS-2181 Investigate re-homing SNMP devices
