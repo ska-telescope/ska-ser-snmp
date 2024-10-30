@@ -225,6 +225,16 @@ class AttributePollingComponentManager(
                 " on, off, standby, reset or abort"
             )
 
+    def abort_tasks(  # noqa: D102
+        self: AttributePollingComponentManager,
+        task_callback: TaskCallbackType | None = None,
+    ) -> tuple[TaskStatus, str]:
+        if True:  # pylint: disable=using-constant-test
+            raise NotImplementedError(
+                "AttributePollingComponentManager doesn't implement"
+                " on, off, standby, reset or abort"
+            )
+
     def poll_failed(
         self: AttributePollingComponentManager, exception: Exception
     ) -> None:
