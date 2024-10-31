@@ -2,7 +2,7 @@
 
 ## unreleased
 
-## 0.3.2
+## 0.4.0
 MCCS-2313 read yaml file from telmodel
 
 ## 0.3.0
