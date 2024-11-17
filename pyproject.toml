@@ -22,7 +22,7 @@ url = 'https://pypi.org/simple'
 
 [tool.poetry.dependencies]
 python = "~3.10"  
-pytango = "^9.5.0"
+pytango = "^10.0.0"
 PyYAML = "^6.0.1"
 ska-tango-base = "^1.0.0"
 ska-control-model = "^1.0.0"
@@ -50,7 +50,7 @@ toml = "^0.10.2"
 pycodestyle = "^2.9.1"
 referencing = "^0.35.1"
 ska-ser-devices ="^0.2.0"
-ska-tango-testing = "^0.4.0"
+ska-tango-testing = "^0.7.3"
 types-pyyaml = "^6.0.12.12"
 rpds-py = "^0.13.1"
 jsonschema_specifications = "^2023.12.1"
