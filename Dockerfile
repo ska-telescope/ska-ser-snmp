@@ -4,7 +4,7 @@ FROM $BUILD_IMAGE AS buildenv
 FROM $BASE_IMAGE
 
 USER root
-
+RUN sudo apt-get install -y python3.11 && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 2
 RUN poetry config virtualenvs.create false
 
 WORKDIR /app

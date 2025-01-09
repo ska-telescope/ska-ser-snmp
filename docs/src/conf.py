@@ -247,7 +247,7 @@ epub_exclude_files = ["search.html"]
 
 # -- Extension configuration -------------------------------------------------
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.10/", None),
+    "python": ("https://docs.python.org/3.11/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pytango": ("https://pytango.readthedocs.io/en/stable/", None),
     "ska-control-model": (
