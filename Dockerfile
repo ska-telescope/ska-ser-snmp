@@ -4,6 +4,10 @@ FROM $BUILD_IMAGE AS buildenv
 FROM $BASE_IMAGE
 
 USER root
+ENV TZ="United_Kingdom/London"
+ENV DEBIAN_FRONTEND=noninteractive
+RUN sudo apt-get install software-properties-common -y
+RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get install -y python3.11 && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2
 RUN poetry config virtualenvs.create false
 
