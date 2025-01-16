@@ -12,4 +12,4 @@ import ska_snmp_device
 
 def test_version() -> None:
     """Test that the ska_ser_snmp version is as expected."""
-    assert ska_snmp_device.__version__ == "0.4.1"
+    assert ska_snmp_device.__version__ == "0.4.2"
