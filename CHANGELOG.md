@@ -2,6 +2,7 @@
 
 ## unreleased
 
+* WOM-602 Update mib liberary with PDU2
 * MCCS-2330 Relax Pytango version specifier to allow migration to 10.0 in downsream packages
 
 ## 0.4.0
