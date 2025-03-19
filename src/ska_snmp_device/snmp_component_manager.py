@@ -43,6 +43,7 @@ class SNMPComponentManager(AttributePollingComponentManager):
         Iterable[tuple[ErrorIndication, str, int, Iterable[ObjectType]]],
     ]
 
+    # pylint: disable=too-many-positional-arguments
     def __init__(  # noqa: D107
         self: SNMPComponentManager,
         host: str,
