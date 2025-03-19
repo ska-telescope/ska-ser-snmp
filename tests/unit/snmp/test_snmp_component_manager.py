@@ -15,7 +15,7 @@ import pytest
 from ska_control_model import CommunicationStatus
 
 from ska_snmp_device.snmp_component_manager import SNMPComponentManager
-from ska_snmp_device.types import SNMPAttrInfo
+from ska_snmp_device.snmp_types import SNMPAttrInfo
 
 
 @pytest.fixture(name="component_manager")

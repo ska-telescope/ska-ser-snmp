@@ -245,7 +245,6 @@ def _range_intersection(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, in
     :raises ValueError: range do not intersect
     :return: the start,stop intersection values
     """
-    # pylint: disable=invalid-name
     c = max(a[0], b[0]), min(a[1], b[1])
     if c[0] > c[1]:
         raise ValueError(f"Ranges {a} and {b} are disjoint")

@@ -24,7 +24,7 @@ from ska_attribute_polling.attribute_polling_component_manager import (
     AttrPollRequest,
     AttrPollResponse,
 )
-from ska_snmp_device.types import SNMPAttrInfo, python_to_snmp, snmp_to_python
+from ska_snmp_device.snmp_types import SNMPAttrInfo, python_to_snmp, snmp_to_python
 
 
 class SNMPComponentManager(AttributePollingComponentManager):

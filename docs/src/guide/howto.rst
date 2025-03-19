@@ -138,6 +138,25 @@ Setting `polling_period: 10000` means the object won't be queried any more
 frequently than once every 10 seconds. Setting it to `polling_period: .inf`
 means it will be polled only once.
 
+access
+^^^^^^
+Client access to attributes can be specified with the keyword 'access' with values
+that determine what level of access is allowed. The following values are allowed:
+    "read"
+    "readonly"
+    "read-only"
+    "write"
+    "writeonly"
+    "write-only"
+    "readwrite"
+    "read-write"
+
+For example:
+ 
+  - name: outlet24State
+    oid: [ENLOGIC-PDU-MIB, pduOutletSwitchedSTATUSState, 1, 24]
+    access: readonly
+
 Roadmap
 =======
 * Use BULK operations

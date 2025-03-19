@@ -20,11 +20,22 @@ from pysnmp.smi.compiler import addMibCompiler
 from ska_telmodel.data import TMData
 from tango import AttrWriteType
 
-from ska_snmp_device.types import (
+from ska_snmp_device.snmp_types import (
     SNMPAttrInfo,
     attr_args_from_snmp_type,
     dtype_string_to_type,
 )
+
+AccessType = {
+    "read": AttrWriteType.READ,
+    "readonly": AttrWriteType.READ,
+    "read-only": AttrWriteType.READ,
+    "write": AttrWriteType.WRITE,
+    "writeonly": AttrWriteType.WRITE,
+    "write-only": AttrWriteType.WRITE,
+    "readwrite": AttrWriteType.READ_WRITE,
+    "read-write": AttrWriteType.READ_WRITE,
+}
 
 
 def load_device_definition(filename: str, repo: str | None) -> Any:
@@ -86,7 +97,6 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     :param mib_builder: mib builder
     :param attr: attribute
 
-    :raises TypeError: no associated Python type
     :return: SNMP attribute information
     """
     # Pop off the values we're going to use in this function. The rest will
@@ -97,6 +107,31 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
     # get metadata about the SNMP object definition in the MIB
     (mib_info,) = mib_builder.importSymbols(mib_name, symbol_name)
 
+    attr = _adjust_overrides(attr)
+
+    # Build args to be passed to tango.server.attribute()
+    attr_args = {
+        "access": AccessType[mib_info.maxAccess],
+        **attr_args_from_snmp_type(mib_info.syntax),
+        **attr,  # allow user to override generated args
+    }
+
+    return SNMPAttrInfo(
+        polling_period=polling_period,
+        attr_args=attr_args,
+        identity=oid,
+    )
+
+
+def _adjust_overrides(attr: dict[str, Any]) -> dict[str, Any]:
+    """
+    Modify the provided attribute suitable for pytango.
+
+    :param attr: attribute
+
+    :raises TypeError: no associated Python type or access type
+    :return: adjusted attribute information
+    """
     if isinstance(attr.get("dtype"), str):
         try:
             attr["dtype"] = dtype_string_to_type(attr["dtype"])
@@ -107,25 +142,18 @@ def _build_attr_info(mib_builder: MibBuilder, attr: dict[str, Any]) -> SNMPAttrI
                 "has no associated Python type"
             ) from exc
 
-    # Build args to be passed to tango.server.attribute()
-    attr_args = {
-        "access": {
-            "readonly": AttrWriteType.READ,
-            "read-only": AttrWriteType.READ,
-            "writeonly": AttrWriteType.WRITE,
-            "write-only": AttrWriteType.WRITE,
-            "readwrite": AttrWriteType.READ_WRITE,
-            "read-write": AttrWriteType.READ_WRITE,
-        }[mib_info.maxAccess],
-        **attr_args_from_snmp_type(mib_info.syntax),
-        **attr,  # allow user to override generated args
-    }
+    # allow user to specify attribute access mode if not given by mib_info.maxAccess
+    if isinstance(attr.get("access"), str):
+        try:
+            attr["access"] = AccessType[attr["access"]]
+        except KeyError as exc:
+            raise TypeError(
+                f"The access type \"{attr['access']}\" "
+                f"provided for attribute \"{attr['name']}\" "
+                "is not valid "
+            ) from exc
 
-    return SNMPAttrInfo(
-        polling_period=polling_period,
-        attr_args=attr_args,
-        identity=oid,
-    )
+    return attr
 
 
 def _create_mib_builder() -> MibBuilder:

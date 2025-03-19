@@ -19,7 +19,7 @@ import pytest
 from more_itertools import iter_except, partition
 from tango import DevFailed, DeviceProxy, EventData, EventType
 
-from ska_snmp_device.types import _SNMP_ENUM_INVALID_PREFIX
+from ska_snmp_device.snmp_types import _SNMP_ENUM_INVALID_PREFIX
 
 from .conftest import expect_attribute, restore
 
