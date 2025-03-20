@@ -2,17 +2,20 @@
 
 ## unreleased
 
+## 0.5.0
+* WOM-700: add access keyword 
+
 ## 0.4.2
-* WOM-602 Update mib liberary with PDU2
-* MCCS-2330 Relax Pytango version specifier to allow migration to 10.0 in downsream packages
+* WOM-602: Update mib liberary with PDU2
+* MCCS-2330: Relax Pytango version specifier to allow migration to 10.0 in downsream packages
 
 ## 0.4.1
 ## 0.4.0
-MCCS-2313 read yaml file from telmodel
+MCCS-2313: read yaml file from telmodel
 
 ## 0.3.0
-MCCS-2261 update
-MCCS-2181 Investigate re-homing SNMP devices
+MCCS-2261: update
+MCCS-2181: Investigate re-homing SNMP devices
 
 ## 0.2.0
 
