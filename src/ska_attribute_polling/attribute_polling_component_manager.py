@@ -61,6 +61,7 @@ class AttributePollingComponentManager(
 ):
     """An implementation of the attribute polling component manager."""
 
+    # pylint: disable=too-many-positional-arguments
     def __init__(  # noqa: D107
         self: AttributePollingComponentManager,
         logger: logging.Logger,

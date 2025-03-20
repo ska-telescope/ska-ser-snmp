@@ -9,8 +9,10 @@
 
 import pytest
 import yaml
+from tango import AttrWriteType
 
 from ska_snmp_device.definitions import (
+    _adjust_overrides,
     _expand_attribute,
     load_device_definition,
     parse_device_definition,
@@ -176,3 +178,81 @@ def test_expand_attribute_invalid_identifier() -> None:
 
     with pytest.raises(ValueError, match="identifier"):
         list(_expand_attribute(template))
+
+
+def test_expand_attribute_with_access() -> None:
+    """Test loading an attribute with access mode specified."""
+    template = yaml.safe_load(
+        """
+    attributes:
+        - name: net_wr0_status
+          oid: [MY-MIB, wr0_status, 0]
+          access: read
+        - name: net_wr1_status
+          oid: [MY-MIB, wr1_status, 0]
+          access: readonly
+        - name: net_wr2_status
+          oid: [MY-MIB, wr2_status, 0]
+          access: read-only
+        - name: net_wr3_status
+          oid: [MY-MIB, wr3_status, 0]
+          access: write
+        - name: net_wr4_status
+          oid: [MY-MIB, wr4_status, 0]
+          access: writeonly
+        - name: net_wr5_status
+          oid: [MY-MIB, wr5_status, 0]
+          access: write-only
+        - name: net_wr6_status
+          oid: [MY-MIB, wr6_status, 0]
+          access: readwrite
+        - name: net_wr7_status
+          oid: [MY-MIB, wr7_status, 0]
+          access: read-write
+        """
+    )
+    expected = [
+        {
+            "name": "net_wr0_status",
+            "oid": ["MY-MIB", "wr0_status", 0],
+            "access": AttrWriteType.READ,
+        },
+        {
+            "name": "net_wr1_status",
+            "oid": ["MY-MIB", "wr1_status", 0],
+            "access": AttrWriteType.READ,
+        },
+        {
+            "name": "net_wr2_status",
+            "oid": ["MY-MIB", "wr2_status", 0],
+            "access": AttrWriteType.READ,
+        },
+        {
+            "name": "net_wr3_status",
+            "oid": ["MY-MIB", "wr3_status", 0],
+            "access": AttrWriteType.WRITE,
+        },
+        {
+            "name": "net_wr4_status",
+            "oid": ["MY-MIB", "wr4_status", 0],
+            "access": AttrWriteType.WRITE,
+        },
+        {
+            "name": "net_wr5_status",
+            "oid": ["MY-MIB", "wr5_status", 0],
+            "access": AttrWriteType.WRITE,
+        },
+        {
+            "name": "net_wr6_status",
+            "oid": ["MY-MIB", "wr6_status", 0],
+            "access": AttrWriteType.READ_WRITE,
+        },
+        {
+            "name": "net_wr7_status",
+            "oid": ["MY-MIB", "wr7_status", 0],
+            "access": AttrWriteType.READ_WRITE,
+        },
+    ]
+    attrlist = template["attributes"]
+    adjusted = [_adjust_overrides(attr) for attr in attrlist]
+    assert adjusted == expected

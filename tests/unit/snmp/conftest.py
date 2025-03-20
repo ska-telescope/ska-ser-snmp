@@ -27,7 +27,6 @@ from tango.test_context import DeviceTestContext
 from ska_snmp_device.snmp_device import SNMPDevice
 
 
-# pylint: disable=too-many-nested-blocks
 def expect_attribute(
     tango_device: DeviceProxy,
     attr: str,
